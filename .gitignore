@@ -1,0 +1,8 @@
+*.o
+*.so
+test
+img_server
+img_client
+*~
+
+
