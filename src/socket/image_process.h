@@ -8,14 +8,15 @@ extern "C" {
 #include <opencv/cv.h>
 
 #include "../socket/message.h"
-#include "../sampler/quantify.h"
+#include "../sampler/quantize.h"
 
-extern int return_message(int connfd);
+extern int return_message(MyMessage* msg_back, int connfd);
 
-extern MyQuantifiedImage* image_quantify(IplImage* img, MyMessage* msg, int connfd);
+extern MyQuantizedImage* image_quantize(IplImage* img, MyMessage* msg, int connfd);
 
 extern int send_size(IplImage* img, MyMessage* msg, int connfd);
-extern int palette_edge_sampler(MyQuantifiedImage* quant_img, MyMessage* msg, int connfd);
+extern int palette_edge_sampler(MyQuantizedImage* quant_img, MyMessage* msg, int connfd);
+extern int quant_point_color(MyQuantizedImage* quant_img, MyMessage* msg, int connfd);
 
 #ifdef __cplusplus
 }

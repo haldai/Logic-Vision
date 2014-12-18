@@ -3,7 +3,7 @@
 
 #include <opencv/cv.h>
 
-#include "quantify.h"
+#include "quantize.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +37,7 @@ extern void myCvPixelAvgColorDescriptor(IplImage* img, MyCvDescriptor* _descript
 
 extern void myCvPixelMedColorDescriptor(IplImage* img, MyCvDescriptor* _descriptor, CvPoint _pixel, int _neighbor_size);
 
-extern void myCvPixelPaletteDescriptor(MyQuantifiedImage* quant, MyCvDescriptor* _descriptor, CvPoint _pixel, int _neighbor_size);
+extern void myCvPixelPaletteDescriptor(MyQuantizedImage* quant, MyCvDescriptor* _descriptor, CvPoint _pixel, int _neighbor_size);
 
 #ifdef __cplusplus
 }

@@ -15,7 +15,7 @@
 int main(void) { 
     int cluster_num = 4;
 
-    MyMessage* msg = myCreateMsg(MY_MSG_QTFY_IMG);
+    MyMessage* msg = myCreateMsg(MY_MSG_QTZ_IMG);
     msg->palette_size = cluster_num;
 
     int connfd;

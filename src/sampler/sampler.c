@@ -149,7 +149,7 @@ MyCvLineSampler* myCvLineSampler(void* img, MyCvLine** lineAdd, int _descriptor_
 	for (int i = 0; i < line->size; i++) {
 	    CvPoint *p = (CvPoint*) cvGetSeqElem(line->points, i);
 	    MyCvDescriptor* d = myCvCreateDescriptor(MY_DESCRIPTOR_TYPE_PALETTE);
-	    myCvPixelPaletteDescriptor((MyQuantifiedImage*) img, d, *p, _neighbor_size);
+	    myCvPixelPaletteDescriptor((MyQuantizedImage*) img, d, *p, _neighbor_size);
 	    (re->descriptors)[i] = *d;
 	}
     }
@@ -222,7 +222,7 @@ float paletteDescriptorDiff(MyCvPalette *palette1, MyCvPalette *palette2, int sa
     }
 }
 
-double myCvPaletteDistance(MyQuantifiedImage* quant, CvPoint p1, CvPoint p2, int filter_size, double l_channel_weight) {
+double myCvPaletteDistance(MyQuantizedImage* quant, CvPoint p1, CvPoint p2, int filter_size, double l_channel_weight) {
 
     assert(filter_size%2 == 1);
     
@@ -347,7 +347,7 @@ CvScalar myCvDV(IplImage* img, CvPoint point, int size, int filter_size, double 
     return result;
 }
 
-CvScalar myCvPaletteDV(MyQuantifiedImage* quant, CvPoint point, int size, int filter_size, double l_channel_weight, int hv) {
+CvScalar myCvPaletteDV(MyQuantizedImage* quant, CvPoint point, int size, int filter_size, double l_channel_weight, int hv) {
     // size must be an odd number
     assert(size%2 == 1);
     int rad = (size - 1)/2; // radius

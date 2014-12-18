@@ -1,6 +1,6 @@
 #include "sampler/subimg.h"
 #include "sampler/sampler.h"
-#include "sampler/quantify.h"
+#include "sampler/quantize.h"
 #include "utils/utils.h"
 
 #include <stdio.h>
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     int clusterNum = atoi(argv[2]);
     int neighborSize = atoi(argv[3]);
 
-    MyQuantifiedImage* quant = kmeansQuantification(img, clusterNum);
+    MyQuantizedImage* quant = kmeansQuantization(img, clusterNum);
 
     //IplImage* sub = sub_rect(img, cvPoint(500, 200), 300, 100);
     MyCvLine* line = myCvLineDir(img, cvPoint(0, 200), myCvDirect(1, 0), 1600);
@@ -41,6 +41,13 @@ int main(int argc, char** argv) {
 	CvScalar c = palette->colorTable[color];
 	printf("(%f, %f, %f)\n", c.val[0], c.val[1], c.val[2]);
     }
+
+    // labelMat(y, x);
+    /*
+    int l = (int) cvGetReal2D(quant->labelMat, 532, 399);
+    printf("q_color: %d\n", l);
+    printf("labelMat: %d, %d\n", quant->labelMat->rows, quant->labelMat->cols);
+    */
     
     //myCvHighVariancePointOnLine(line_sampler);
 
@@ -48,14 +55,16 @@ int main(int argc, char** argv) {
 	CvPoint* point = (CvPoint*) cvGetSeqElem(line->points, p);
 	printf ("(%d, %d)\t ", point->x, point->y);
 
-	//TODO: debug myCvDV & ANNF
-	CvScalar ss = myCvDV(myQuantifyGetImage(quant), *point, 3, 3, .3, 1);
+	//myCvDV & ANNF
+	CvScalar ss = myCvDV(myQuantizeGetImage(quant), *point, 3, 3, .3, 1);
 	for (int i = 0; i < 4; i++) {
 	    printf("%f ", ss.val[i]);
 	}
 	printf("\n");
     }
-    
+
+
+
     // test ANNF contour
     IplImage* contour = cvCreateImage(
 	cvSize(img->width, img->height),
@@ -67,7 +76,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < img->width; i++) {
 	for (int j = 0; j < img->height; j++) {
 	    CvPoint point = cvPoint(i, j);
-	    //CvScalar ss = myCvDV(myQuantifyGetImage(quant), point, 5, 3, .3, 1);
+	    //CvScalar ss = myCvDV(myQuantizeGetImage(quant), point, 5, 3, .3, 1);
 	    //CvScalar ss = myCvDV(img, point, 5, 3, .3, 1);
 	    CvScalar ss = myCvPaletteDV(quant, point, 5, palette_window, 0.3, 1);
 
@@ -81,32 +90,33 @@ int main(int argc, char** argv) {
 	    }
 	    if (max < atoi(argv[5]))
 		continue;
+	    int k = 0;
 	    switch (max_k) {
 	    case 0:
 	    {
-		CvPoint start = myCvHandleEdgePoint(cvPoint(i - 1, j), img->width, img->height);
-		CvPoint end = myCvHandleEdgePoint(cvPoint(i + 1, j), img->width, img->height);
+		CvPoint start = myCvHandleEdgePoint(cvPoint(i - k, j), img->width, img->height);
+		CvPoint end = myCvHandleEdgePoint(cvPoint(i + k, j), img->width, img->height);
 		cvLine(contour, start, end, cvScalar(255, 0, 0, 0), 1, 8, 0);
 		break;
 	    }
 	    case 1:
 	    {
-		CvPoint start = myCvHandleEdgePoint(cvPoint(i, j - 1), img->width, img->height);
-		CvPoint end = myCvHandleEdgePoint(cvPoint(i, j + 1), img->width, img->height);
+		CvPoint start = myCvHandleEdgePoint(cvPoint(i, j - k), img->width, img->height);
+		CvPoint end = myCvHandleEdgePoint(cvPoint(i, j + k), img->width, img->height);
 		cvLine(contour, start, end, cvScalar(0, 255, 0, 0), 1, 8, 0);
-		break;
-	    }
-	    case 2:
-	    {
-		CvPoint start = myCvHandleEdgePoint(cvPoint(i + 1, j - 1), img->width, img->height);
-		CvPoint end = myCvHandleEdgePoint(cvPoint(i - 1, j + 1), img->width, img->height);
-		cvLine(contour, start, end, cvScalar(0, 0, 255, 0), 1, 8, 0);
 		break;
 	    }
 	    case 3:
 	    {
-		CvPoint start = myCvHandleEdgePoint(cvPoint(i - 1, j - 1), img->width, img->height);
-		CvPoint end = myCvHandleEdgePoint(cvPoint(i + 1, j + 1), img->width, img->height);
+		CvPoint start = myCvHandleEdgePoint(cvPoint(i + k, j - k), img->width, img->height);
+		CvPoint end = myCvHandleEdgePoint(cvPoint(i - k, j + k), img->width, img->height);
+		cvLine(contour, start, end, cvScalar(0, 0, 255, 0), 1, 8, 0);
+		break;
+	    }
+	    case 2:
+	    {
+		CvPoint start = myCvHandleEdgePoint(cvPoint(i - k, j - k), img->width, img->height);
+		CvPoint end = myCvHandleEdgePoint(cvPoint(i + k, j + k), img->width, img->height);
 		cvLine(contour, start, end, cvScalar(255, 255, 0, 0), 1, 8, 0);
 		break;
 	    }
@@ -114,18 +124,19 @@ int main(int argc, char** argv) {
 	    }
 	}
     }
+
   
 //    cvLine(img, cvPoint(242, 400), cvPoint(256, 400), cvScalar(0, 0, 0, 0), 2, 8, 0);
 
     myDisplayLabImg("src", img);
 
-    myDisplayLabImg("quant", myQuantifyGetImage(quant));
+    myDisplayLabImg("quant", myQuantizeGetImage(quant));
     
     myDisplayImg("contour", contour);
 
     cvReleaseImage(&img);
     cvReleaseImage(&contour);
-    myCvReleaseQuantifiedImage(&quant);
+    myCvReleaseQuantizedImage(&quant);
     myCvReleaseLine(&line);
     myCvReleaseLineSampler(&line_sampler);
     return 0;

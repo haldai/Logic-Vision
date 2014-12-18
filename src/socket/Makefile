@@ -15,7 +15,7 @@ LIBS = -lpthread -lncurses -lm -fPIC `pkg-config --libs opencv`
 all:img_server socket_server.o img_server.o message.o img_client
 
 img_server:socket_server.o img_server.o message.o image_process.o sampler_dir utils_dir
-	$(CC) $(LIBS) socket_server.o img_server.o message.o image_process.o ../sampler/quantify.o ../sampler/sampler.o ../sampler/descriptor.o ../sampler/subimg.o ../utils/utils.o -o img_server
+	$(CC) $(LIBS) socket_server.o img_server.o message.o image_process.o ../sampler/quantize.o ../sampler/sampler.o ../sampler/descriptor.o ../sampler/subimg.o ../utils/utils.o -o img_server
 
 utils_dir:
 	-make -C ../utils all

@@ -53,6 +53,32 @@ const int sendMsg(MyMessage* msg, char* scktmp) {
     return connfd;
 }
 
+const int confirm_img(void) {
+    PlTermv size(2);
+    try {
+	if (PlCall("img_size", size) == TRUE)
+	    return TRUE;
+	else
+	    return FALSE;
+    } catch (PlException &ex) {
+	cerr << "Image not loaded." << endl;
+	return FALSE;
+    }
+}
+
+const int confirm_quant(void) {
+    PlTermv quant_num(1);
+    try {
+	if (PlCall("quant_num", quant_num) == TRUE)
+	    return TRUE;
+	else
+	    return FALSE;
+    } catch (PlException &ex) {
+	cerr << "Image not quantified." << endl;
+	return FALSE;
+    }
+}
+
 /* load_img('image_path', PID).
  * Start an image processing server, load image and unifies PID 
  * with the server.
@@ -112,6 +138,7 @@ PREDICATE(load_img, 2) {
 		msg_back = NULL;
 		return FALSE;
 	    } else if (msg_back->msg_type == MY_MSG_MSGGOT) {
+		cout << "*** assert img_size/2 ***" << endl;
 		client_socket_close(connfd, scktmp);
 		int size_x = msg_back->x;
 		int size_y = msg_back->y;
@@ -148,6 +175,10 @@ PREDICATE(load_img, 2) {
  * the server.
  */
 PREDICATE(img_release, 0) {
+    if (confirm_img() == FALSE) {
+	return FALSE;
+    }
+    
     MyMessage* msg = myCreateMsg(MY_MSG_RLS_IMG);
     
     int connfd;
@@ -201,10 +232,14 @@ PREDICATE(img_release, 0) {
 /* img_quantify(N).
  * Quantify original image, use kmeans to reduce it to N colors.
  */
-PREDICATE(img_quantify, 1) {
+PREDICATE(img_quantize, 1) {
+    if (confirm_img() == FALSE) {
+	return FALSE;
+    }
+    
     int cluster_num = (int) A1;
     
-    MyMessage* msg = myCreateMsg(MY_MSG_QTFY_IMG);
+    MyMessage* msg = myCreateMsg(MY_MSG_QTZ_IMG);
     msg->palette_size = cluster_num;
 
     int connfd;
@@ -231,6 +266,9 @@ PREDICATE(img_quantify, 1) {
 	printf("[CLIENT] message sent.\n");
     }
     // wait for return message from server
+    
+    CvScalar colorTable[cluster_num]; // quantized color table
+
     while (1) {
 	buff = (char *) malloc(sizeof(MyMessage));
 	MyMessage* msg_back = (MyMessage *) malloc(sizeof(MyMessage));
@@ -246,7 +284,9 @@ PREDICATE(img_quantify, 1) {
 	    return FALSE;
 	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
 	    client_socket_close(connfd, scktmp);
-	    printf("[CLIENT] Confirmed: Image quantified.\n");
+	    printf("[CLIENT] Confirmed: Image quantized.\n");
+	    for (int i = 0; i < cluster_num; i++)
+		colorTable[i] = msg_back->colorTable[i];
 	    free(msg_back);
 	    msg_back = NULL;
 	    break;
@@ -255,6 +295,61 @@ PREDICATE(img_quantify, 1) {
 	    free(msg_back);
 	    msg_back = NULL;
 	    return FALSE;
+	}
+    }
+
+    /* assert quant_num/1 */
+    cout << "*** assert quant_num/1 ***" << endl;
+    PlTermv quant(1);
+    PlTermv args_q(1);
+    args_q[0] = cluster_num;
+    quant[0] = PlCompound("quant_num", args_q);
+    PlCall("assertz", quant);
+    cout << "assertz(quant_num(" << cluster_num << "))." << endl;
+
+    /* assert color_diff/3, color_L_diff/3, color_ab_diff/3 */
+    cout << "*** assert color_diff/3, color_L_diff/3, color_ab_diff/3 ***" << endl;
+    for (int i = 0; i < cluster_num; i++) {
+	for (int j = 0; j < cluster_num; j++) {
+	    // color_diff: Euclidean difference of two quantized colors
+	    PlTermv color_diff(1);
+	    double d = euDist(colorTable[i], colorTable[j], 1.0);
+	    PlTermv args_cd(3);
+	    args_cd[0] = i;
+	    args_cd[1] = j;
+	    args_cd[2] = d;
+	    color_diff[0] = PlCompound("color_diff", args_cd);
+	    PlCall("assertz", color_diff);
+	    cout << "assertz(color_diff(" << 
+		i << ", " << j << ", " << d << ")." << endl;
+	    
+	    // color_L_diff: L channel (bright) difference of two colors
+	    PlTermv color_L_diff(1);
+	    d = abs(colorTable[i].val[0] - colorTable[j].val[0]);
+	    PlTermv args_cLd(3);
+	    args_cLd[0] = i;
+	    args_cLd[1] = j;
+	    args_cLd[2] = d;
+	    color_L_diff[0] = PlCompound("color_L_diff", args_cLd);
+	    PlCall("assertz", color_L_diff);
+	    cout << "assertz(color_L_diff(" << 
+		i << ", " << j <<  ", " << d << ")." << endl;
+
+
+	    // color_ab_diff: ab channel Euclidean difference of two colors
+	    PlTermv color_ab_diff(1);
+	    d = sqrt(
+		pow(colorTable[i].val[1] - colorTable[j].val[1], 2)
+		+ pow(colorTable[i].val[2] - colorTable[j].val[2], 2)
+		);
+	    PlTermv args_cabd(3);
+	    args_cabd[0] = i;
+	    args_cabd[1] = j;
+	    args_cabd[2] = d;
+	    color_ab_diff[0] = PlCompound("color_ab_diff", args_cabd);
+	    PlCall("assertz", color_ab_diff);
+	    cout << "assertz(color_ab_diff(" << 
+		i << ", " << j <<  ", " << d << ")." << endl;
 	}
     }
 
@@ -339,7 +434,7 @@ PREDICATE(hv_point_line, 3) {
 		return FALSE;
 	    } else if (msg_back->msg_type == MY_MSG_MSGGOT) {
 		client_socket_close(connfd, scktmp);
-		printf("[CLIENT] Confirmed: Image quantified.\n");
+		printf("[CLIENT] Confirmed: Image quantized.\n");
 		free(msg_back);
 		msg_back = NULL;
 		break;
@@ -373,10 +468,25 @@ PREDICATE(hv_point_segment, 3) {
 
 */
 
-// edge_point predicate
+// primitives
+
+/* edge_point(X, Y, V, D):
+ * X, Y: point coordinate
+ * V: returned edge value
+ * D: most probable edge direction, 0 for -, 1 for |, 2 for \, 3 for / (currently only 0 and 1 are supported)
+ * Notice: should be used after img_quantize/1
+ */
+
 PREDICATE(edge_point, 4) {
+
+    if (confirm_img() == FALSE)
+	return FALSE;
+    
+    if (confirm_quant() == FALSE)
+	return FALSE;
+
     // if value argument is variable, fail this backtracking, do not sample;
-    if 	(!PL_is_variable(A3.ref)) {
+    if 	(!PL_is_variable(A3.ref) || PL_is_variable(A1.ref) || PL_is_variable(A2.ref)) {
 	return FALSE;
     } else {
 	int x = (int) A1;
@@ -390,24 +500,23 @@ PREDICATE(edge_point, 4) {
 		height = (int) size[1];
 	    }
 	} catch (PlException &ex) {
-	    cerr << "Error point position." << endl;
+	    cerr << "Error img_size." << endl;
 	    return FALSE;
 	}
 
-	
 	if (x < 0 || x >= width || y < 0 || y >= height) {
-	    cout << "Wrong point position" << endl;
+	    cout << "Point position out of bound." << endl;
 	    return FALSE;
 	}
 	
-	// send message
+	// make message
 	MyMessage* msg = myCreateMsg(MY_MSG_PALETTE_EDGE_POINT);
 	char scktmp[256];
 	msg->x = x;
 	msg->y = y;
-	msg->sample_on_quant_img = TRUE; // use quantiled image
+	msg->sample_on_quant_img = TRUE; // use quantized image
+
 	// query if defined sample_window_size and l_channel_weight in prolog
-	// TODO: not work
 	PlTermv window_size(1);
 
 	try { 
@@ -433,7 +542,7 @@ PREDICATE(edge_point, 4) {
 	    return FALSE;
 	}
 	int connfd = sendMsg(msg, scktmp);
-	if ( connfd < 0) {
+	if (connfd < 0) {
 	    return FALSE;
 	}
 
@@ -483,4 +592,85 @@ PREDICATE(edge_point, 4) {
 	}
     }
     return TRUE;
+}
+
+
+/* point_color(X, Y, C)
+ * X, Y: point coordinate
+ * C: color number
+ * Notice: should be used after img_quantize/1
+ */
+PREDICATE(point_color, 3) {
+
+    if (confirm_img() == FALSE)
+	return FALSE;
+    
+    if (confirm_quant() == FALSE)
+	return FALSE;
+
+    if (PL_is_variable(A1.ref) || PL_is_variable(A2.ref))
+	return FALSE;
+    // check whether point out of bound
+    int x = (int) A1;
+    int y = (int) A2;
+
+    PlTermv size(2);
+    int width = 0, height = 0;
+    try {
+	if (PlCall("img_size", size) == TRUE) {
+	    width = (int) size[0];
+	    height = (int) size[1];
+	}
+    } catch (PlException &ex) {
+	cerr << "Error img_size." << endl;
+	return FALSE;
+    }
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+	cout << "Point position out of bound." << endl;
+	return FALSE;
+    }
+
+    // make message
+    MyMessage* msg = myCreateMsg(MY_MSG_POINT_COLOR);
+    char scktmp[256];
+    msg->x = x;
+    msg->y = y;
+    msg->sample_on_quant_img = TRUE; // use quantized image
+
+    // send message
+    int connfd = sendMsg(msg, scktmp);
+    if (connfd < 0) {
+	return FALSE;
+    }
+
+    // read return message
+    int q_color = -1;
+    while (1) {
+	char *buff = (char *) malloc(sizeof(MyMessage));
+	MyMessage* msg_back = (MyMessage *) malloc(sizeof(MyMessage));
+	int backmsg_size = recv(connfd, buff, sizeof(MyMessage), 0);
+	memcpy(msg_back, buff, sizeof(MyMessage));
+	free(buff);
+	buff = NULL;
+
+	if (backmsg_size < 0) {
+	    perror("[CLIENT] ERROR recieving message from server");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
+	    client_socket_close(connfd, scktmp);
+	    cout << "[CLIENT] Confirmed: got point color." << endl;
+	    q_color = (int) msg_back->scalar.val[0];
+	    free(msg_back);
+	    msg_back = NULL;
+	    break;
+	} else {
+	    printf("[CLIENT] Unexpected message from image server.\n");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	}
+    }
+    return A3 = q_color;
 }

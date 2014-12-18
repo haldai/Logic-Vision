@@ -140,7 +140,7 @@ void myCvPixelMedColorDescriptor(IplImage* img, MyCvDescriptor* _descriptor, CvP
     _descriptor->data = color;
 }
 
-void myCvPixelPaletteDescriptor(MyQuantifiedImage* quant, MyCvDescriptor* _descriptor, CvPoint _pixel, int _neighbor_size) {
+void myCvPixelPaletteDescriptor(MyQuantizedImage* quant, MyCvDescriptor* _descriptor, CvPoint _pixel, int _neighbor_size) {
     assert((_descriptor->type == MY_DESCRIPTOR_TYPE_PALETTE) && (_neighbor_size >= 0));
 
     // initialization

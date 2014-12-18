@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     listenfd = unix_socket_listen("../../tmp/img_server.sock");
 
     IplImage* img = myReadImg2Lab(image_path);
-    MyQuantifiedImage* quant_img = NULL;
+    MyQuantizedImage* quant_img = NULL;
 
     while (1) {
 	uid_t uid;
@@ -43,13 +43,13 @@ int main(int argc, char** argv) {
 	    printf("[SERVER] Recieved: release image.\n");
 	    cvReleaseImage(&img);
 	    if (quant_img != NULL) {
-		myCvReleaseQuantifiedImage(&quant_img);
+		myCvReleaseQuantizedImage(&quant_img);
 	    }
 	    unix_socket_close(listenfd);
 	    // return a message
-	    int backmsg_size = return_message(connfd);
+	    int backmsg_size = return_message(NULL, connfd);
 	    if (backmsg_size < 0) {
-		perror("[SERVER] ERROR sending message to client");
+		perror("[SERVER] ERROR responding to client");
 		exit(EXIT_FAILURE);
 	    } else {
 		exit(EXIT_SUCCESS);
@@ -57,15 +57,15 @@ int main(int argc, char** argv) {
 	    }
 	    break;
 	}
-	case MY_MSG_QTFY_IMG:
+	case MY_MSG_QTZ_IMG:
 	{
-	    quant_img = image_quantify(img, msg, connfd);
+	    quant_img = image_quantize(img, msg, connfd);
 	    break;
 	}
 	case MY_MSG_REQUIRE_SIZE:
 	{
 	    if (send_size(img, msg, connfd) < 0) {
-		perror("[SERVER] ERROR responsing client");
+		perror("[SERVER] ERROR responsing to client");
 	    }
 	    break;
 	}
@@ -75,10 +75,20 @@ int main(int argc, char** argv) {
 		perror("[SERVER] ERROR no quantified image");
 	    } else {
 		if (palette_edge_sampler(quant_img, msg, connfd) < 0) {
-		    perror("[SERVER] ERROR responsing client");
+		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
 	    break;
+	}
+	case MY_MSG_POINT_COLOR:
+	{
+	    if (quant_img == NULL) {
+		perror("[SERVER] ERROR no quantified image");
+	    } else {
+		if (quant_point_color(quant_img, msg, connfd) < 0) {
+		    perror("[SERVER] ERROR responsing to client");
+		}
+	    }
 	}
 	default:
 	    break;

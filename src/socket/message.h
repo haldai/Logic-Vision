@@ -34,10 +34,11 @@ extern "C" {
 #define MY_MSG_POINT_AVG_PALETTE 4
 #define MY_MSG_EDGE_POINT 5
 #define MY_MSG_PALETTE_EDGE_POINT 6
-#define MY_MSG_QTFY_IMG 7
-#define MY_MSG_RLS_QTFY_IMG 8
+#define MY_MSG_QTZ_IMG 7
+#define MY_MSG_RLS_QTZ_IMG 8
 #define MY_MSG_LINE_SAMPLER 9
 #define MY_MSG_REQUIRE_SIZE 10
+#define MY_MSG_COLOR_DIFF 11
 
 #define LINE_SAMPLER_NEIGHBOR_SIZE 7
 #define L_CHANNEL_WEIGHT 0.3
@@ -80,17 +81,3 @@ extern MyMessage* myCreateMsg(int msg_type);
 #endif
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-

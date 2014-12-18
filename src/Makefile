@@ -24,7 +24,7 @@ kmeans:
 	$(CC) $(CFLAGS) kmeans.c -o kmeans $(LIBS)
 
 test:test.o sampler_dir utils_dir
-	$(CC) $(CFLAGS) test.o ./sampler/subimg.o ./sampler/sampler.o ./sampler/descriptor.o ./sampler/quantify.o ./utils/utils.o -o test $(LIBS)
+	$(CC) $(CFLAGS) test.o ./sampler/subimg.o ./sampler/sampler.o ./sampler/descriptor.o ./sampler/quantize.o ./utils/utils.o -o test $(LIBS)
 
 test.o:
 	$(CC) $(CFLAGS) -c -o test.o test.c

@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #include "../sampler/descriptor.h"
-#include "../sampler/quantify.h"
+#include "../sampler/quantize.h"
 #include "../utils/utils.h"
 
 // store a line and pointer of points on this line
@@ -37,7 +37,7 @@ extern void myCvReleaseLine(MyCvLine** l);
 #define MY_CV_SAMPLE_DESCRIPTOR_PIXEL 0
 #define MY_CV_SAMPLE_DESCRIPTOR_AVG_PIXEL 1
 #define MY_CV_SAMPLE_DESCRIPTOR_MED_PIXEL 2
-#define MY_CV_SAMPLE_DESCRIPTOR_PALETTE 3 // must be used with MyQuantifiedImg
+#define MY_CV_SAMPLE_DESCRIPTOR_PALETTE 3 // must be used with MyQuantizedImg
 
 // store a MyCvLine and its descriptor
 typedef struct {
@@ -57,12 +57,12 @@ extern CvPoint* myCvHighVariancePointOnLine(MyCvLineSampler* line_sampler);
 
 extern void myCvReleaseLineSampler(MyCvLineSampler** s);
 
-// use quantified image palette to measure distance of two points
-extern double myCvPaletteDistance(MyQuantifiedImage* quant, CvPoint p1, CvPoint p2, int size, double l_channel_weight);
+// use quantized image palette to measure distance of two points
+extern double myCvPaletteDistance(MyQuantizedImage* quant, CvPoint p1, CvPoint p2, int size, double l_channel_weight);
 
 // vector difference of a point, size: window size, hv: whether only use horizontal and vertical difference
 extern CvScalar myCvDV(IplImage* img, CvPoint point, int size, int filter_size, double l_channel_weight, int hv);
-extern CvScalar myCvPaletteDV(MyQuantifiedImage* quant, CvPoint point, int size, int filter_size, double l_channel_weight, int hv);
+extern CvScalar myCvPaletteDV(MyQuantizedImage* quant, CvPoint point, int size, int filter_size, double l_channel_weight, int hv);
 
 #ifdef __cplusplus
 }

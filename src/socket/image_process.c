@@ -3,9 +3,10 @@
 #include "../socket/image_process.h"
 #include "../sampler/sampler.h"
 
-int return_message(int connfd) {
+int return_message(MyMessage* msg_back, int connfd) {
     // return a message
-    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    if (msg_back == NULL)
+	msg_back = myCreateMsg(MY_MSG_MSGGOT);
     char* buffer = (char *) malloc(sizeof(MyMessage));
     memcpy(buffer, msg_back, sizeof(MyMessage));
     int backmsg_size = send(connfd, buffer, sizeof(MyMessage), 0);
@@ -16,16 +17,32 @@ int return_message(int connfd) {
     return backmsg_size;
 }
 
-MyQuantifiedImage* image_quantify(IplImage* img, MyMessage* msg, int connfd) {
-    assert(msg->msg_type == MY_MSG_QTFY_IMG);
+MyQuantizedImage* image_quantize(IplImage* img, MyMessage* msg, int connfd) {
+    assert(msg->msg_type == MY_MSG_QTZ_IMG);
     int cluster_num = msg->palette_size;
     printf("[SERVER] Recieved: quantify image to %d colors.\n", 
 	   cluster_num);
-    MyQuantifiedImage *quant_img = kmeansQuantification(img, cluster_num);
-    int backmsg_size = return_message(connfd);
+    MyQuantizedImage *quant_img = kmeansQuantization(img, cluster_num);
+
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    msg_back->palette_size = quant_img->tableSize;
+    
+    for (int i = 0; i < quant_img->tableSize; i++) {
+	msg_back->colorTable[i] = cvScalar(
+	    quant_img->colorTable[i].val[0],
+	    quant_img->colorTable[i].val[1],
+	    quant_img->colorTable[i].val[2],
+	    quant_img->colorTable[i].val[3]
+	    );
+    }
+
+    int backmsg_size = return_message(msg_back, connfd);
     if (backmsg_size < 0) {
 	perror("[SERVER] ERROR sending message to client");
     }
+
+
+    
     return quant_img;
 }
 
@@ -47,7 +64,7 @@ int send_size(IplImage* img, MyMessage *msg, int connfd) {
     return backmsg_size;
 }
 
-int palette_edge_sampler(MyQuantifiedImage* quant_img, MyMessage* msg, int connfd) {
+int palette_edge_sampler(MyQuantizedImage* quant_img, MyMessage* msg, int connfd) {
     assert(msg->msg_type == MY_MSG_PALETTE_EDGE_POINT);
     CvPoint point = cvPoint(msg->x, msg->y);
     printf("point: %d, %d\n", msg->x, msg->y); //debug
@@ -76,5 +93,12 @@ int palette_edge_sampler(MyQuantifiedImage* quant_img, MyMessage* msg, int connf
     msg_back = NULL;
 
     return backmsg_size;
+}
+
+int quant_point_color(MyQuantizedImage* quant_img, MyMessage* msg, int connfd) {
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    int q_color = (int) cvGetReal2D(quant_img->labelMat, msg->y, msg->x);
+    msg_back->scalar = cvScalar(q_color, 0, 0, 0);
+    return return_message(msg_back, connfd);
 }
 
