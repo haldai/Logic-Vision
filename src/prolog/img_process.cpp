@@ -229,7 +229,7 @@ PREDICATE(img_release, 0) {
     }
 }
 
-/* img_quantify(N).
+/* img_quantize(N).
  * Quantify original image, use kmeans to reduce it to N colors.
  */
 PREDICATE(img_quantize, 1) {
@@ -311,6 +311,22 @@ PREDICATE(img_quantize, 1) {
     cout << "*** assert color_diff/3, color_L_diff/3, color_ab_diff/3 ***" << endl;
     for (int i = 0; i < cluster_num; i++) {
 	for (int j = 0; j < cluster_num; j++) {
+	    if (i == j) {
+		PlTermv color_diff(1);
+		PlTermv color_L_diff(1);
+		PlTermv color_ab_diff(1);
+		PlTermv args(3);
+		args[0] = i;
+		args[1] = j;
+		args[2] = .0;
+		color_diff[0] = PlCompound("color_diff", args);
+		color_L_diff[0] = PlCompound("color_L_diff", args);
+		color_ab_diff[0] = PlCompound("color_ab_diff", args);
+		PlCall("assertz", color_diff);
+		PlCall("assertz", color_L_diff);
+		PlCall("assertz", color_ab_diff);
+		continue;
+	    }
 	    // color_diff: Euclidean difference of two quantized colors
 	    PlTermv color_diff(1);
 	    double d = euDist(colorTable[i], colorTable[j], 1.0);
