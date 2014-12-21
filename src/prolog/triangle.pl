@@ -2,7 +2,7 @@
 
 % parameters
 edge_thresh(5.0).
-recursion_limit(5).
+recursion_limit(1).
 
 % definition
 triangle_point(P1, P2, P3):-

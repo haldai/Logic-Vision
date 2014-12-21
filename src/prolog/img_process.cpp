@@ -138,7 +138,7 @@ PREDICATE(load_img, 2) {
 		msg_back = NULL;
 		return FALSE;
 	    } else if (msg_back->msg_type == MY_MSG_MSGGOT) {
-		cout << "*** assert img_size/2 ***" << endl;
+		// cout << "*** assert img_size/2 ***" << endl;
 		client_socket_close(connfd, scktmp);
 		int size_x = msg_back->x;
 		int size_y = msg_back->y;
@@ -148,7 +148,7 @@ PREDICATE(load_img, 2) {
 		PlTermv size(1);
 		size[0] = PlCompound("img_size", args);
 		PlCall("assertz", size);
-		cout << "assertz(img_size(" << size_x << ", " << size_y  << "))."<< endl;
+		// cout << "assertz(img_size(" << size_x << ", " << size_y  << "))."<< endl;
 		free(msg_back);
 		msg_back = NULL;
 
@@ -299,16 +299,16 @@ PREDICATE(img_quantize, 1) {
     }
 
     /* assert quant_num/1 */
-    cout << "*** assert quant_num/1 ***" << endl;
+    // cout << "*** assert quant_num/1 ***" << endl;
     PlTermv quant(1);
     PlTermv args_q(1);
     args_q[0] = cluster_num;
     quant[0] = PlCompound("quant_num", args_q);
     PlCall("assertz", quant);
-    cout << "assertz(quant_num(" << cluster_num << "))." << endl;
+    // cout << "assertz(quant_num(" << cluster_num << "))." << endl;
 
     /* assert color_diff/3, color_L_diff/3, color_ab_diff/3 */
-    cout << "*** assert color_diff/3, color_L_diff/3, color_ab_diff/3 ***" << endl;
+    // cout << "*** assert color_diff/3, color_L_diff/3, color_ab_diff/3 ***" << endl;
     for (int i = 0; i < cluster_num; i++) {
 	for (int j = 0; j < cluster_num; j++) {
 	    if (i == j) {
@@ -336,8 +336,8 @@ PREDICATE(img_quantize, 1) {
 	    args_cd[2] = d;
 	    color_diff[0] = PlCompound("color_diff", args_cd);
 	    PlCall("assertz", color_diff);
-	    cout << "assertz(color_diff(" << 
-		i << ", " << j << ", " << d << ")." << endl;
+	    // cout << "assertz(color_diff(" << 
+	    // i << ", " << j << ", " << d << ")." << endl;
 	    
 	    // color_L_diff: L channel (bright) difference of two colors
 	    PlTermv color_L_diff(1);
@@ -348,8 +348,8 @@ PREDICATE(img_quantize, 1) {
 	    args_cLd[2] = d;
 	    color_L_diff[0] = PlCompound("color_L_diff", args_cLd);
 	    PlCall("assertz", color_L_diff);
-	    cout << "assertz(color_L_diff(" << 
-		i << ", " << j <<  ", " << d << ")." << endl;
+	    // cout << "assertz(color_L_diff(" << 
+	    // i << ", " << j <<  ", " << d << ")." << endl;
 
 
 	    // color_ab_diff: ab channel Euclidean difference of two colors
@@ -364,8 +364,8 @@ PREDICATE(img_quantize, 1) {
 	    args_cabd[2] = d;
 	    color_ab_diff[0] = PlCompound("color_ab_diff", args_cabd);
 	    PlCall("assertz", color_ab_diff);
-	    cout << "assertz(color_ab_diff(" << 
-		i << ", " << j <<  ", " << d << ")." << endl;
+	    // cout << "assertz(color_ab_diff(" << 
+	    // i << ", " << j <<  ", " << d << ")." << endl;
 	}
     }
 
@@ -399,7 +399,7 @@ PREDICATE(hv_point_line, 3) {
 	    k = (double) args[1];
 	    b = (double) args[2];
 	} else {
-	    cout << "No line named as " << (char *) A1 << "." << endl;
+	    // cout << "No line named as " << (char *) A1 << "." << endl;
 	    return FALSE;
 	}
 	// compute start point
@@ -413,7 +413,7 @@ PREDICATE(hv_point_line, 3) {
 	    width = (int) size[0];
 	    height = (int) size[1];
 	} else {
-	    cout << "Error reading image size." << endl;
+	    // cout << "Error reading image size." << endl;
 	    return FALSE;
 	}
 	y_e = (k*width + b) < height ? (int) (round(k*width + b)) : height - 1;
@@ -521,7 +521,7 @@ PREDICATE(edge_point, 4) {
 	}
 
 	if (x < 0 || x >= width || y < 0 || y >= height) {
-	    cout << "Point position out of bound." << endl;
+	    // cout << "Point position out of bound." << endl;
 	    return FALSE;
 	}
 	
@@ -539,7 +539,7 @@ PREDICATE(edge_point, 4) {
 	    PlCall("sample_window_size", window_size);
 	    msg->sampler_neighbor_size = (int) window_size[0];
 	} catch (PlException &ex) { 
-	    cout << "Use default window size" << endl;
+	    // cout << "Use default window size" << endl;
 	    msg->sampler_neighbor_size = LINE_SAMPLER_NEIGHBOR_SIZE;
 	}
 
@@ -549,12 +549,12 @@ PREDICATE(edge_point, 4) {
 	    PlCall("l_channel_weight", l_channel_weight);
 	    msg->l_channel_weight = (double) l_channel_weight[0];
 	} catch (PlException &ex) { 
-	    cout << "Use default L channel weight" << endl;
+	    // cout << "Use default L channel weight" << endl;
 	    msg->l_channel_weight = L_CHANNEL_WEIGHT;
 	}
 
 	if (msg->sampler_neighbor_size%2 != 1) {
-	    cout << "Neighbor size should be odd number." << endl;
+	    // cout << "Neighbor size should be odd number." << endl;
 	    return FALSE;
 	}
 	int connfd = sendMsg(msg, scktmp);
@@ -578,7 +578,7 @@ PREDICATE(edge_point, 4) {
 		return FALSE;
 	    } else if (msg_back->msg_type == MY_MSG_MSGGOT) {
 		client_socket_close(connfd, scktmp);
-		cout << "[CLIENT] Confirmed: edge point checked." << endl;
+		// cout << "[CLIENT] Confirmed: edge point checked." << endl;
 
 		if (PL_is_variable(A4.ref)) {
 		    double max = .0;
@@ -642,7 +642,7 @@ PREDICATE(point_color, 3) {
 	return FALSE;
     }
     if (x < 0 || x >= width || y < 0 || y >= height) {
-	cout << "Point position out of bound." << endl;
+	// cout << "Point position out of bound." << endl;
 	return FALSE;
     }
 
@@ -676,7 +676,7 @@ PREDICATE(point_color, 3) {
 	    return FALSE;
 	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
 	    client_socket_close(connfd, scktmp);
-	    cout << "[CLIENT] Confirmed: got point color." << endl;
+	    // cout << "[CLIENT] Confirmed: got point color." << endl;
 	    q_color = (int) msg_back->scalar.val[0];
 	    free(msg_back);
 	    msg_back = NULL;

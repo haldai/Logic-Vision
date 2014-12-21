@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 	msg_size = recv(connfd, buffer, sizeof(MyMessage), 0);
 
 	if(msg_size < 0) {
-	    printf("[SERVER] Error reading from socket.\n");	 
+	    perror("[SERVER] Error reading from socket.\n");	 
 	    break;		
 	}
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 	switch(msg->msg_type) {
 	case MY_MSG_RLS_IMG:
 	{
-	    printf("[SERVER] Recieved: release image.\n");
+	    // printf("[SERVER] Recieved: release image.\n");
 	    cvReleaseImage(&img);
 	    if (quant_img != NULL) {
 		myCvReleaseQuantizedImage(&quant_img);

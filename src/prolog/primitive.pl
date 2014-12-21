@@ -12,31 +12,36 @@ point_on_line_seg(P, L, S):-
     X > X_1,
     X < X_2.
 
-% define midpoint/3
-midpoint(P1, P2, P):-
-    point(P1, X1, Y1),
-    point(P2, X2, Y2),
-    X3_d is (X1 + X2)/2,
-    Y3_d is (Y1 + Y2)/2,
-    X3 is truncate(X3_d),
-    Y3 is truncate(Y3_d),
-    assertz(point(P, X3, Y3)). % TODO
+% define midpoint/5
+midpoint(X1, Y1, X2, Y2, X, Y):-
+    X_d is (X1 + X2)/2,
+    Y_d is (Y1 + Y2)/2,
+    X is truncate(X_d),
+    Y is truncate(Y_d).
+
 
 % use N to limit recursion times
-edge_line_seg(P1, P2, 0):-
-    edge_point(P1),
-    edge_point(P2),
-    midpoint(P1, P2, P),
-    edge_point(P).
-edge_line_seg(P1, P2, N):-
-    midpoint(P1, P2, P),
-    N2 is N - 1,
-    edge_line_seg(P1, P, N2),
-    edge_line_seg(P, P2, N2).
+edge_line_seg(X1, Y1, X2, Y2, 0):-
+    edge_point(X1, Y1),
+    edge_point(X2, Y2),
+    midpoint(X1, Y1, X2, Y2, X3, Y3),
+    edge_point(X3, Y3).
 
-% define edge_point/1
-edge_point(P):-
-    point(P, X, Y),
+edge_line_seg(X1, Y1, X2, Y2, N):-
+    N > 0,
+    midpoint(X1, Y1, X2, Y2, X, Y),
+    N2 is N - 1,
+    edge_line_seg(X1, Y1, X, Y, N2),
+    edge_line_seg(X, Y, X2, Y2, N2),
+    !.
+
+edge_line_seg(P1, P2, N):-
+    point(P1, X1, Y1),
+    point(P2, X2, Y2),
+    edge_line_seg(X1, Y1, X2, Y2, N).
+
+% define edge_point/2
+edge_point(X, Y):-
     edge_thresh(T),
     edge_point(X, Y, V, _),
     V >= T.

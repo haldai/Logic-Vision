@@ -67,18 +67,19 @@ int send_size(IplImage* img, MyMessage *msg, int connfd) {
 int palette_edge_sampler(MyQuantizedImage* quant_img, MyMessage* msg, int connfd) {
     assert(msg->msg_type == MY_MSG_PALETTE_EDGE_POINT);
     CvPoint point = cvPoint(msg->x, msg->y);
-    printf("point: %d, %d\n", msg->x, msg->y); //debug
+    // printf("point: %d, %d\n", msg->x, msg->y); //debug
     int window_size = msg->sampler_neighbor_size;
-    printf("weight: %f\n", msg->l_channel_weight); //debug
-    printf("size: %d\n", msg->sampler_neighbor_size); //debug
+    // printf("weight: %f\n", msg->l_channel_weight); //debug
+    // printf("size: %d\n", msg->sampler_neighbor_size); //debug
 
     double l_channel_weight = msg->l_channel_weight;
     CvScalar dv = myCvPaletteDV(quant_img, point, 5, window_size, l_channel_weight, 1);
-    
+    /*
     for (int i = 0; i < 4; i++) {
 	    printf("%f ", dv.val[i]);
     }
     printf("\n");
+    */
     
     MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
     // return image size

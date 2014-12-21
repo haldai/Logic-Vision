@@ -18,3 +18,5 @@ end_prog:-
 point(a, 142, 97).
 point(b, 320, 116).
 point(c, 242, 221).
+point(d, 288, 159).
+point(o, 0, 0).
