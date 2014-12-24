@@ -1,4 +1,5 @@
 #include <opencv/cv.h>
+#include <opencv/highgui.h>
 
 #include "../socket/socket_server.h"
 #include "../socket/message.h"
@@ -18,6 +19,9 @@ int main(int argc, char** argv) {
 
     IplImage* img = myReadImg2Lab(image_path);
     MyQuantizedImage* quant_img = NULL;
+
+    IplImage* bgr = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 3);
+    cvCvtColor(img, bgr, CV_Lab2BGR);
 
     while (1) {
 	uid_t uid;
@@ -44,6 +48,9 @@ int main(int argc, char** argv) {
 	    cvReleaseImage(&img);
 	    if (quant_img != NULL) {
 		myCvReleaseQuantizedImage(&quant_img);
+	    }
+	    if (bgr != NULL) {
+		cvReleaseImage(&bgr);
 	    }
 	    unix_socket_close(listenfd);
 	    // return a message
@@ -89,6 +96,58 @@ int main(int argc, char** argv) {
 		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
+	    break;
+	}
+	case MY_MSG_DRAW_POINT:
+	{
+	    if (img == NULL) {
+		perror("[SERVER] ERROR no image");
+	    } else if (bgr == NULL) {
+		perror("[SERVER] ERROR no image to show");
+	    } else {
+		int response = draw_point(&bgr, msg, connfd);
+		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE);
+		cvShowImage(PIC_DISPLAY_NAME, bgr);
+		cvWaitKey(100);
+		if (response < 0) {
+		    perror("[SERVER] ERROR responsing to client");
+		}
+	    }
+	    break;
+	}
+	case MY_MSG_REFRESH_DISPLAY:
+	{
+	    if (img == NULL) {
+		perror("[SERVER] ERROR no image");
+	    } else if (bgr == NULL) {
+		perror("[SERVER] ERROR no image to show");
+	    } else {
+		int response = redraw(msg, connfd);
+		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE);
+		cvCvtColor(img, bgr, CV_Lab2BGR);
+		cvShowImage(PIC_DISPLAY_NAME, bgr);
+		cvWaitKey(100);
+		if (response < 0) {
+		    perror("[SERVER] ERROR responsing to client");
+		}
+	    }
+	    break;
+	}
+	case MY_MSG_CLOSE_DISPLAY:
+	{
+	    if (img == NULL) {
+		perror("[SERVER] ERROR no image");
+	    } else if (bgr == NULL) {
+		perror("[SERVER] ERROR no image to show");
+	    } else {
+		int response = exit_display(msg, connfd);
+		printf("close!!!!\n");
+		cvDestroyWindow(PIC_DISPLAY_NAME);
+		if (response < 0) {
+		    perror("[SERVER] ERROR responsing to client");
+		}
+	    }
+	    break;
 	}
 	default:
 	    break;

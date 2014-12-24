@@ -8,7 +8,7 @@ init:-
     
     % start image processor
     load_foreign_library(foreign('img_process.so')),
-    load_img('../../triangle.jpg', _),
+    load_img('../../test1.jpg', _),
     img_quantize(2).
 
 end_prog:-

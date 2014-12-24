@@ -24,7 +24,7 @@ using namespace std;
 const string GetClearName(const char* name) {
     int status = -1;
     char* clearName = abi::__cxa_demangle(name, NULL, NULL, &status);
-    const char* const demangledName = (status==0) ? clearName : name;
+    const char* const demangledName = (status == 0) ? clearName : name;
     string ret_val(demangledName);
     free(clearName);
     return ret_val;
@@ -689,4 +689,194 @@ PREDICATE(point_color, 3) {
 	}
     }
     return A3 = q_color;
+}
+
+/* display_point(X, Y, C)
+ * Draw point at (X, Y) with color C = {y, r, g, b, w, k}
+ */
+PREDICATE(display_point, 3) {
+    if (confirm_img() == FALSE)
+	return FALSE;
+    if (PL_is_variable(A1.ref) || PL_is_variable(A2.ref))
+	return FALSE;
+
+    // check whether point out of bound
+    int x = (int) A1;
+    int y = (int) A2;
+    PlTermv size(2);
+    int width = 0, height = 0;
+    try {
+	if (PlCall("img_size", size) == TRUE) {
+	    width = (int) size[0];
+	    height = (int) size[1];
+	}
+    } catch (PlException &ex) {
+	cerr << "Error img_size." << endl;
+	return FALSE;
+    }
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+	// cout << "Point position out of bound." << endl;
+	return FALSE;
+    }
+
+    MyMessage *msg = myCreateMsg(MY_MSG_DRAW_POINT);
+    msg->x = x;
+    msg->y = y;
+    
+    char *c = (char*) A3;
+    switch (c[0]) {
+    case 'y':
+	msg->scalar = CV_RGB(255, 255, 0);
+	break;
+    case 'r':
+	msg->scalar = CV_RGB(255, 0, 0);
+	break;
+    case 'g':
+	msg->scalar = CV_RGB(0, 255, 0);
+	break;
+    case 'b':
+	msg->scalar = CV_RGB(0, 0, 255);
+	break;
+    case 'w':
+	msg->scalar = CV_RGB(255, 255, 255);
+	break;
+    case 'k':
+	msg->scalar = CV_RGB(0, 0, 0);
+	break;
+    default:
+	msg->scalar = CV_RGB(255, 255, 0);
+	break;
+    }
+
+    // send message
+    char scktmp[256];
+    sprintf(scktmp, "../../tmp/scktmp%05d", getpid());
+    int connfd = sendMsg(msg, scktmp);
+    if (connfd < 0) {
+	return FALSE;
+    }
+
+    // read return message
+    while (1) {
+	char *buff = (char *) malloc(sizeof(MyMessage));
+	MyMessage* msg_back = (MyMessage *) malloc(sizeof(MyMessage));
+	int backmsg_size = recv(connfd, buff, sizeof(MyMessage), 0);
+	memcpy(msg_back, buff, sizeof(MyMessage));
+	free(buff);
+	buff = NULL;
+
+	if (backmsg_size < 0) {
+	    perror("[CLIENT] ERROR recieving message from server");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
+	    client_socket_close(connfd, scktmp);
+	    // cout << "[CLIENT] Confirmed: point drawed." << endl;
+	    free(msg_back);
+	    msg_back = NULL;
+	    break;
+	} else {
+	    printf("[CLIENT] Unexpected message from image server.\n");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	}
+    }
+    return TRUE;
+}
+
+/* display_refresh.
+ * refresh display
+ */
+PREDICATE(display_refresh, 0) {
+    if (confirm_img() == FALSE)
+	return FALSE;
+
+    MyMessage *msg = myCreateMsg(MY_MSG_REFRESH_DISPLAY);
+    
+    // send message
+    char scktmp[256];
+    sprintf(scktmp, "../../tmp/scktmp%05d", getpid());
+    int connfd = sendMsg(msg, scktmp);
+    if (connfd < 0) {
+	return FALSE;
+    }
+
+    // read return message
+    while (1) {
+	char *buff = (char *) malloc(sizeof(MyMessage));
+	MyMessage* msg_back = (MyMessage *) malloc(sizeof(MyMessage));
+	int backmsg_size = recv(connfd, buff, sizeof(MyMessage), 0);
+	memcpy(msg_back, buff, sizeof(MyMessage));
+	free(buff);
+	buff = NULL;
+
+	if (backmsg_size < 0) {
+	    perror("[CLIENT] ERROR recieving message from server");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
+	    client_socket_close(connfd, scktmp);
+	    // cout << "[CLIENT] Confirmed: point drawed." << endl;
+	    free(msg_back);
+	    msg_back = NULL;
+	    break;
+	} else {
+	    printf("[CLIENT] Unexpected message from image server.\n");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	}
+    }
+    return TRUE;
+}
+
+
+/* display_close.
+ * close display
+ */
+PREDICATE(display_close, 0) {
+    if (confirm_img() == FALSE)
+	return FALSE;
+
+    MyMessage *msg = myCreateMsg(MY_MSG_CLOSE_DISPLAY);
+    
+    // send message
+    char scktmp[256];
+    sprintf(scktmp, "../../tmp/scktmp%05d", getpid());
+    int connfd = sendMsg(msg, scktmp);
+    if (connfd < 0) {
+	return FALSE;
+    }
+
+    // read return message
+    while (1) {
+	char *buff = (char *) malloc(sizeof(MyMessage));
+	MyMessage* msg_back = (MyMessage *) malloc(sizeof(MyMessage));
+	int backmsg_size = recv(connfd, buff, sizeof(MyMessage), 0);
+	memcpy(msg_back, buff, sizeof(MyMessage));
+	free(buff);
+	buff = NULL;
+
+	if (backmsg_size < 0) {
+	    perror("[CLIENT] ERROR recieving message from server");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
+	    client_socket_close(connfd, scktmp);
+	    // cout << "[CLIENT] Confirmed: point drawed." << endl;
+	    free(msg_back);
+	    msg_back = NULL;
+	    break;
+	} else {
+	    printf("[CLIENT] Unexpected message from image server.\n");
+	    free(msg_back);
+	    msg_back = NULL;
+	    return FALSE;
+	}
+    }
+    return TRUE;
 }

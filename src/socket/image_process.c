@@ -103,3 +103,20 @@ int quant_point_color(MyQuantizedImage* quant_img, MyMessage* msg, int connfd) {
     return return_message(msg_back, connfd);
 }
 
+int draw_point(IplImage **img, MyMessage *msg, int connfd) {
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    CvScalar color = msg->scalar;
+    CvPoint point = cvPoint(msg->x, msg->y);
+    cvCircle(*img, point, 3, color, 2, 8, 0);
+    return return_message(msg_back, connfd);
+}
+
+int redraw(MyMessage *msg, int connfd) {
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    return return_message(msg_back, connfd);
+}
+
+int exit_display(MyMessage *msg, int connfd) {
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    return return_message(msg_back, connfd);
+}

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#include <unistd.h>
 
 int main(int argc, char** argv) {
     IplImage* img = myReadImg2Lab(argv[1]);
@@ -128,13 +129,42 @@ int main(int argc, char** argv) {
   
 //    cvLine(img, cvPoint(242, 400), cvPoint(256, 400), cvScalar(0, 0, 0, 0), 2, 8, 0);
 
-    myDisplayLabImg("src", img);
+    //myDisplayLabImg("src", img);
 
-    myDisplayLabImg("quant", myQuantizeGetImage(quant));
+    //myDisplayLabImg("quant", myQuantizeGetImage(quant));
     
-    myDisplayImg("contour", contour);
+    //myDisplayImg("contour", contour);
+
+    IplImage* bgr = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 3);
+    cvCvtColor(img, bgr, CV_Lab2BGR);
+    
+    cvNamedWindow("src", CV_WINDOW_AUTOSIZE);
+    cvShowImage("src", bgr);
+    cvWaitKey(0);
+
+    // draw again
+    cvLine(img, cvPoint(100, 100), cvPoint(200, 200), cvScalar(90, 255, -255, 0), 3, 8, 0);
+    cvCvtColor(img, bgr, CV_Lab2BGR);
+
+    cvNamedWindow("src", CV_WINDOW_AUTOSIZE);
+    cvShowImage("src", bgr);
+    cvWaitKey(0);
+
+    //cvDestroyWindow("src");
+    cvDestroyAllWindows();
+    cvWaitKey(100);
 
     cvReleaseImage(&img);
+    cvReleaseImage(&bgr);
+
+    printf("destroyed.\n");
+
+    sleep(2);
+
+    printf("destroyed.\n");
+
+    sleep(2);
+
     cvReleaseImage(&contour);
     myCvReleaseQuantizedImage(&quant);
     myCvReleaseLine(&line);
