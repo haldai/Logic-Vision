@@ -836,6 +836,8 @@ PREDICATE(display_refresh, 0) {
 
 /* display_close.
  * close display
+ * WARNING: due to the opencv bug in gtk, the predicate cannot close
+ * the displaying window, only freezes it.
  */
 PREDICATE(display_close, 0) {
     if (confirm_img() == FALSE)

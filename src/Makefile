@@ -15,8 +15,8 @@ CC = gcc
 #Options for release
 
 INCLUDE = -I/usr/include/ncurses -I/usr/include/ -I/usr/include/opencv/ -I/usr/include/opencv2/
-CFLAGS = -g -Wall -std=c11 -fPIC `pkg-config --cflags opencv`
-LIBS = -lpthread -lncurses -lm -fPIC `pkg-config --libs opencv`
+CFLAGS = -g -Wall -std=c11 -fPIC `pkg-config --cflags opencv` `pkg-config --cflags Qt5Gui`
+LIBS = -lpthread -lncurses -lm -fPIC `pkg-config --libs opencv` `pkg-config --libs Qt5Gui`
 
 all:test sampler_dir utils_dir socket_dir prolog_dir sampler_dir
 

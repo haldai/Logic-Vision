@@ -12,8 +12,8 @@ CC = g++
 #LIBS
 #CFLAGS
 
-CFLAGS = -Wall -shared -fPIC -fno-strict-aliasing -pthread -fPIC -I../../include `pkg-config --cflags opencv`
-LIBS = -Wall -shared -fPIC -lm -L../../lib/swipl/x86_64-linux -rdynamic -O2 -pthread -Wl,-rpath=../../lib/swipl/x86_64-linux -lswipl `pkg-config --libs opencv`
+CFLAGS = -Wall -shared -fPIC -fno-strict-aliasing -pthread -fPIC -I../../include `pkg-config --cflags opencv` `pkg-config --cflags Qt5Gui`
+LIBS = -Wall -shared -fPIC -lm -L../../lib/swipl/x86_64-linux -rdynamic -O2 -pthread -Wl,-rpath=../../lib/swipl/x86_64-linux -lswipl `pkg-config --libs opencv` `pkg-config --libs Qt5Gui`
 all:img_process.so
 
 img_process.so:img_process.o

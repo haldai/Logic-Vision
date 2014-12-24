@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
 		perror("[SERVER] ERROR no image to show");
 	    } else {
 		int response = exit_display(msg, connfd);
-		printf("close!!!!\n");
+		printf("Display closed.\n");
 		cvDestroyWindow(PIC_DISPLAY_NAME);
 		if (response < 0) {
 		    perror("[SERVER] ERROR responsing to client");

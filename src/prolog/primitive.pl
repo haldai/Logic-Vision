@@ -45,3 +45,8 @@ edge_point(X, Y):-
     edge_thresh(T),
     edge_point(X, Y, V, _),
     V >= T.
+
+% define display_point/2
+display_point(P, C):-
+    point(P, X, Y),
+    display_point(X, Y, C).
