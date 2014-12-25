@@ -46,7 +46,7 @@ const int sendMsg(MyMessage* msg, char* scktmp) {
     free(msg);
     buff = NULL;
     msg = NULL;
-    if (msg_size < 0) {
+     if (msg_size < 0) {
 	perror("[CLIENT] ERROR sending message to server");
 	return -1;
     }

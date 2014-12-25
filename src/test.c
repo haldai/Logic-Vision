@@ -146,20 +146,15 @@ int main(int argc, char** argv) {
     cvLine(img, cvPoint(100, 100), cvPoint(200, 200), cvScalar(90, 255, -255, 0), 3, 8, 0);
     cvCvtColor(img, bgr, CV_Lab2BGR);
 
-    cvNamedWindow("src", CV_WINDOW_AUTOSIZE);
+    cvNamedWindow("src", CV_WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
     cvShowImage("src", bgr);
     cvWaitKey(0);
 
     //cvDestroyWindow("src");
     cvDestroyAllWindows();
-    cvWaitKey(100);
 
     cvReleaseImage(&img);
     cvReleaseImage(&bgr);
-
-    printf("destroyed.\n");
-
-    sleep(2);
 
     printf("destroyed.\n");
 

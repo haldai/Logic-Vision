@@ -18,6 +18,9 @@ int main(int argc, char** argv) {
     listenfd = unix_socket_listen("../../tmp/img_server.sock");
 
     IplImage* img = myReadImg2Lab(image_path);
+    char img_size_str[128];
+    sprintf(img_size_str, "Size: %d×%d", img->width, img->height);
+
     MyQuantizedImage* quant_img = NULL;
 
     IplImage* bgr = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 3);
@@ -44,6 +47,7 @@ int main(int argc, char** argv) {
 	switch(msg->msg_type) {
 	case MY_MSG_RLS_IMG:
 	{
+	    // cvDestroyWindow(PIC_DISPLAY_NAME);
 	    // printf("[SERVER] Recieved: release image.\n");
 	    cvReleaseImage(&img);
 	    if (quant_img != NULL) {
@@ -106,7 +110,8 @@ int main(int argc, char** argv) {
 		perror("[SERVER] ERROR no image to show");
 	    } else {
 		int response = draw_point(&bgr, msg, connfd);
-		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE);
+		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
+		cvDisplayStatusBar(PIC_DISPLAY_NAME, img_size_str, 0);
 		cvShowImage(PIC_DISPLAY_NAME, bgr);
 		cvWaitKey(100);
 		if (response < 0) {
@@ -123,7 +128,8 @@ int main(int argc, char** argv) {
 		perror("[SERVER] ERROR no image to show");
 	    } else {
 		int response = redraw(msg, connfd);
-		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE);
+		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
+		cvDisplayStatusBar(PIC_DISPLAY_NAME, img_size_str, 0);
 		cvCvtColor(img, bgr, CV_Lab2BGR);
 		cvShowImage(PIC_DISPLAY_NAME, bgr);
 		cvWaitKey(100);

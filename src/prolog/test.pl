@@ -4,7 +4,7 @@
 init:-
     % load primitives
     ['primitive.pl'],
-    ['triangle.pl'],
+    ['polygon.pl'],
     
     % start image processor
     load_foreign_library(foreign('img_process.so')),
