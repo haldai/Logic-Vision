@@ -20,8 +20,6 @@ int return_message(MyMessage* msg_back, int connfd) {
 MyQuantizedImage* image_quantize(IplImage* img, MyMessage* msg, int connfd) {
     assert(msg->msg_type == MY_MSG_QTZ_IMG);
     int cluster_num = msg->palette_size;
-    printf("[SERVER] Recieved: quantify image to %d colors.\n", 
-	   cluster_num);
     MyQuantizedImage *quant_img = kmeansQuantization(img, cluster_num);
 
     MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);

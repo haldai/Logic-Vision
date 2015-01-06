@@ -148,16 +148,16 @@ PREDICATE(load_img, 2) {
 		PlTermv size(1);
 		size[0] = PlCompound("img_size", args);
 		PlCall("assertz", size);
-		// cout << "assertz(img_size(" << size_x << ", " << size_y  << "))."<< endl;
+		cout << "[IMG] img_size/2 asserted." << endl;
 		free(msg_back);
 		msg_back = NULL;
 
-		printf("Image loaded, ");
-		printf("server pid = %d\n", server_pid);
+		cout << "[IMG] Image loaded: " << img_path << endl;
+		cout << "[IMG] Server pid = " <<  server_pid << endl;
 
 		return A2 = (int) server_pid;
 	    } else {
-		printf("[CLIENT] Unexpected message from image server.\n");
+		perror("[CLIENT] ERROR Unexpected message from image server");
 		free(msg_back);
 		msg_back = NULL;
 		return FALSE;
@@ -167,6 +167,7 @@ PREDICATE(load_img, 2) {
 	break;
     }
     }
+
     return TRUE;
 }
 
@@ -216,7 +217,7 @@ PREDICATE(img_release, 0) {
 	    return FALSE;
 	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
 	    client_socket_close(connfd, scktmp);
-	    printf("[CLIENT] Confirmed: Image released.\n");
+	    printf("[IMG] Image released.\n");
 	    free(msg_back);
 	    msg_back = NULL;
 	    return TRUE;
@@ -262,8 +263,6 @@ PREDICATE(img_quantize, 1) {
     if (msg_size < 0) {
 	perror("[CLIENT] ERROR message sending");
 	return FALSE;
-    } else {
-	printf("[CLIENT] message sent.\n");
     }
     // wait for return message from server
     
@@ -284,14 +283,14 @@ PREDICATE(img_quantize, 1) {
 	    return FALSE;
 	} else if (msg_back->msg_type == MY_MSG_MSGGOT) {
 	    client_socket_close(connfd, scktmp);
-	    printf("[CLIENT] Confirmed: Image quantized.\n");
+	    cout << "[IMG] Image is quantized to " << cluster_num << " colors" << endl;
 	    for (int i = 0; i < cluster_num; i++)
 		colorTable[i] = msg_back->colorTable[i];
 	    free(msg_back);
 	    msg_back = NULL;
 	    break;
 	} else {
-	    printf("[CLIENT] Unexpected message from image server.\n");
+	    perror("[CLIENT] Unexpected message from image server");
 	    free(msg_back);
 	    msg_back = NULL;
 	    return FALSE;
@@ -308,7 +307,7 @@ PREDICATE(img_quantize, 1) {
     // cout << "assertz(quant_num(" << cluster_num << "))." << endl;
 
     /* assert color_diff/3, color_L_diff/3, color_ab_diff/3 */
-    // cout << "*** assert color_diff/3, color_L_diff/3, color_ab_diff/3 ***" << endl;
+    cout << "[IMG] color_diff/3, color_L_diff/3, color_ab_diff/3 computed." << endl;
     for (int i = 0; i < cluster_num; i++) {
 	for (int j = 0; j < cluster_num; j++) {
 	    if (i == j) {

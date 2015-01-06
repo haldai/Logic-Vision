@@ -48,7 +48,6 @@ int main(int argc, char** argv) {
 	case MY_MSG_RLS_IMG:
 	{
 	    // cvDestroyWindow(PIC_DISPLAY_NAME);
-	    // printf("[SERVER] Recieved: release image.\n");
 	    cvReleaseImage(&img);
 	    if (quant_img != NULL) {
 		myCvReleaseQuantizedImage(&quant_img);

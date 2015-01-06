@@ -1,16 +1,75 @@
-% line(L, K, B): L is a line whose equation is y=K*x+B
-point_on_line(P, L):-
-    point(P, X, Y),
-    line(L, K, B),
-    K*X + B is Y.
+% line(L, A, B, C): L is a line whose equation is a*x+b*y+c=0
+point_on_line(X, Y, A, B, C):-
+    number(X),
+    number(Y),
+    number(A),
+    number(B),
+    number(C),
+    A*X + B*Y + C =:= 0,
+    !.
 
-point_on_line_seg(P, L, S):-
-    point(P, X, Y),
-    line(L, K, B),
-    K*X + B is Y,
-    seg(S, X_1, X_2),
-    X > X_1,
-    X < X_2.
+point_on_line(X, Y, A, B, C):-
+    var(X),
+    number(Y),
+    number(A),
+    A =\= 0,
+    number(B),
+    number(C)
+    -> X is -(B*Y + C)/A;
+
+    var(Y),
+    number(X),
+    number(A),
+    number(B),
+    B =\= 0,
+    number(C)
+    -> Y is -(A*X + C)/B.
+
+point_on_line_seg_x(X, Y, A, B, C, X1, X2):-
+    number(X),
+    number(Y),
+    number(X1),
+    number(X2),
+    number(A),
+    number(B),
+    number(C),
+    A*X + B*Y + C =:= 0,
+    X > X1,
+    X < X2.
+
+point_on_line_seg_y(X, Y, A, B, C, Y1, Y2):-
+    number(X),
+    number(Y),
+    number(Y1),
+    number(Y2),
+    number(A),
+    number(B),
+    number(C),
+    A*X + B*Y + C =:= 0,
+    Y > Y1,
+    Y < Y2.
+
+% get line parameters from two points
+line_parameters(X1, Y1, X2, Y2, A, B, C):-
+    X1 == X2,
+    Y1 =\= Y2,
+    A is 1,
+    B is 0,
+    C is X1,
+    !.
+line_parameters(X1, Y1, X2, Y2, A, B, C):-
+    Y1 == Y2,
+    X1 =\= X2,
+    A is 0,
+    B is 1,
+    C is Y1,
+    !.
+line_parameters(X1, Y1, X2, Y2, A, B, C):-
+    X1 =\= X2,
+    Y1 =\= Y2,
+    A is 1,
+    B is -(X1 - X2)/(Y1 - Y2),
+    C is (X1 - X2)*Y1/(Y1 - Y2) - X1.
 
 % define midpoint/5
 midpoint(X1, Y1, X2, Y2, X, Y):-
@@ -18,7 +77,6 @@ midpoint(X1, Y1, X2, Y2, X, Y):-
     Y_d is (Y1 + Y2)/2,
     X is truncate(X_d),
     Y is truncate(Y_d).
-
 
 % use N to limit recursion times
 edge_line_seg(X1, Y1, X2, Y2, 0):-
