@@ -17,6 +17,23 @@ polygon_chk_v(V):-
     VV = [V2 | Vs],
     polygon_chk_v(VV).
 
+polygon_chk_xy(V):-
+    length(V, Len),
+    Len == 1,
+    !.
+    
+polygon_chk_xy(V):-
+    length(V, Len),
+    Len > 1,
+    V = [V1, V2 | Vs],
+    V1 = [X1, Y1],
+    V2 = [X2, Y2],
+    recursion_limit(N),
+    edge_line_seg(X1, Y1, X2, Y2, N),
+    VV = [V2 | Vs],
+    polygon_chk_xy(VV).
+
+
 % triangle (vertex)
 triangle_chk_v(P1, P2, P3):-
     polygon_chk_v([P1, P2, P3, P1]).

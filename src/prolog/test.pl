@@ -5,7 +5,8 @@ init:-
     % load primitives
     ['primitive.pl'],
     ['polygon.pl'],
-    ['sampler.pl'].
+    ['sampler.pl'],
+    ['utils.pl'],
   
     % start image processor
     load_foreign_library(foreign('img_process.so')),

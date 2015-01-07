@@ -40,7 +40,7 @@ point_on_line(X, Y, A, B, C):-
     -> Yn is -(A*X + C)/B,
        Y is truncate(Yn + 0.5).
 
-% check
+% only checks whether point is in line segment
 point_on_line_seg_x(X, Y, A, B, C, X1, X2):-
     number(X),
     number(Y),
@@ -55,7 +55,7 @@ point_on_line_seg_x(X, Y, A, B, C, X1, X2):-
     X > X1,
     X < X2.
 
-% check
+% only checks whether point is in line segment
 point_on_line_seg_y(X, Y, A, B, C, Y1, Y2):-
     number(X),
     number(Y),
@@ -129,23 +129,6 @@ edge_point(X, Y):-
 display_point(P, C):-
     point(P, X, Y),
     display_point(X, Y, C).
-
-% define inner_product/3
-inner_product([], [], 0).
-inner_product([X|Xs], [Y|Ys], Result):-
-    Prod is X*Y,
-    inner_product(Xs, Ys, Remaining),
-    Result is Prod + Remaining.
-
-% define eu_dist/3
-eu_dist_sum([], [], 0).
-eu_dist_sum([X|Xs], [Y|Ys], Sum):-
-    Dist is (X - Y)^2,
-    eu_dist_sum(Xs, Ys, Remaining),
-    Sum is Dist + Remaining.
-eu_dist(X, Y, Result):-
-    eu_dist_sum(X, Y, Sum),
-    Result is sqrt(Sum).
 
 % define edge_angle/7
 edge_angle(X1, Y1, X2, Y2, X3, Y3, A):-
