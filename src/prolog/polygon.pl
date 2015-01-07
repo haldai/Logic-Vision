@@ -1,9 +1,5 @@
 % polygon matcher
 
-% parameters
-edge_thresh(5.0).
-recursion_limit(2).
-
 % polygon definition (with vertex list)
 % line segment can be a degenerated polygon!
 polygon_chk_v(V):-
