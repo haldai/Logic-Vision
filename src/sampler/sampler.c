@@ -103,8 +103,6 @@ MyCvLineSampler* myCvLineSampler(void* img, MyCvLine** lineAdd, int _descriptor_
     
     re->descriptors = calloc(line->size, sizeof(MyCvDescriptor));
 
-
-
     switch(_descriptor_type) {
     case MY_CV_SAMPLE_DESCRIPTOR_PIXEL: 
     {
@@ -234,12 +232,15 @@ double myCvPaletteDistance(MyQuantizedImage* quant, CvPoint p1, CvPoint p2, int 
     MyCvPalette* palette1 = myCvCreatePalette(quant->tableSize);
     MyCvPalette* palette2 = myCvCreatePalette(quant->tableSize);
 
-    CvScalar* ct1 = calloc(quant->tableSize, sizeof(CvScalar));
-    CvScalar* ct2 = calloc(quant->tableSize, sizeof(CvScalar));
+    //CvScalar* ct1 = calloc(quant->tableSize, sizeof(CvScalar));
+    //CvScalar* ct2 = calloc(quant->tableSize, sizeof(CvScalar));
+    CvScalar ct1[quant->tableSize];
+    CvScalar ct2[quant->tableSize];
 
-
-    float* prop1 = calloc(quant->tableSize, sizeof(float));
-    float* prop2 = calloc(quant->tableSize, sizeof(float));
+    //float* prop1 = calloc(quant->tableSize, sizeof(float));
+    //float* prop2 = calloc(quant->tableSize, sizeof(float));
+    float prop1[quant->tableSize];
+    float prop2[quant->tableSize];
     
     for (int i = 0; i < quant->tableSize; i++) {
 	prop1[i] = .0;
@@ -261,7 +262,6 @@ double myCvPaletteDistance(MyQuantizedImage* quant, CvPoint p1, CvPoint p2, int 
 	    prop2[label] += 1;
 	}
     }
-
     
     int size1 = s1->rows*s1->cols;
     int size2 = s2->rows*s2->cols;
@@ -276,7 +276,24 @@ double myCvPaletteDistance(MyQuantizedImage* quant, CvPoint p1, CvPoint p2, int 
     palette1->colorTable = ct1;
     palette2->colorTable = ct2;
 
-    return paletteDescriptorDiff(palette1, palette2, 1, l_channel_weight);
+    float re = paletteDescriptorDiff(palette1, palette2, 1, l_channel_weight);
+
+    cvReleaseMat(&s1);
+    s1 = NULL;
+    cvReleaseMat(&s2);
+    s2 = NULL;
+    
+    myCvReleasePalette(&palette1);
+    myCvReleasePalette(&palette2);
+
+    /*
+      free(ct1);
+      ct1 = NULL;
+      free(ct2);
+      ct2 = NULL;
+    */
+
+    return re;
 }
 
 // Use Euclidean distance to get edge point

@@ -21,10 +21,9 @@ int main(int argc, char** argv) {
     char img_size_str[128];
     sprintf(img_size_str, "Size: %d×%d", img->width, img->height);
 
-    MyQuantizedImage* quant_img = NULL;
-
     IplImage* bgr = cvCreateImage(cvGetSize(img), IPL_DEPTH_32F, 3);
     cvCvtColor(img, bgr, CV_Lab2BGR);
+    MyQuantizedImage* quant_img = NULL;
 
     while (1) {
 	uid_t uid;
@@ -58,6 +57,8 @@ int main(int argc, char** argv) {
 	    unix_socket_close(listenfd);
 	    // return a message
 	    int backmsg_size = return_message(NULL, connfd);
+	    free(msg);
+	    msg = NULL;
 	    if (backmsg_size < 0) {
 		perror("[SERVER] ERROR responding to client");
 		exit(EXIT_FAILURE);
@@ -70,6 +71,8 @@ int main(int argc, char** argv) {
 	case MY_MSG_QTZ_IMG:
 	{
 	    quant_img = image_quantize(img, msg, connfd);
+	    free(msg);
+	    msg = NULL;
 	    break;
 	}
 	case MY_MSG_REQUIRE_SIZE:
@@ -77,6 +80,8 @@ int main(int argc, char** argv) {
 	    if (send_size(img, msg, connfd) < 0) {
 		perror("[SERVER] ERROR responsing to client");
 	    }
+	    free(msg);
+	    msg = NULL;
 	    break;
 	}
 	case MY_MSG_PALETTE_EDGE_POINT:
@@ -88,6 +93,8 @@ int main(int argc, char** argv) {
 		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
+	    free(msg);
+	    msg = NULL;	    
 	    break;
 	}
 	case MY_MSG_POINT_COLOR:
@@ -99,6 +106,8 @@ int main(int argc, char** argv) {
 		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
+	    free(msg);
+	    msg = NULL;
 	    break;
 	}
 	case MY_MSG_DRAW_POINT:
@@ -117,6 +126,48 @@ int main(int argc, char** argv) {
 		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
+	    free(msg);
+	    msg = NULL;
+	    break;
+	}
+	case MY_MSG_DRAW_POINT_LIST:
+	{
+	    if (img == NULL) {
+		perror("[SERVER] ERROR no image");
+	    } else if (bgr == NULL) {
+		perror("[SERVER] ERROR no image to show");
+	    } else {
+		int response = draw_point_list(&bgr, msg, connfd);
+		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
+		cvDisplayStatusBar(PIC_DISPLAY_NAME, img_size_str, 0);
+		cvShowImage(PIC_DISPLAY_NAME, bgr);
+		cvWaitKey(100);
+		if (response < 0) {
+		    perror("[SERVER] ERROR responsing to client");
+		}
+	    }
+	    free(msg);
+	    msg = NULL;
+	    break;
+	}
+	case MY_MSG_DRAW_LINE:
+	{
+	    if (img == NULL) {
+		perror("[SERVER] ERROR no image");
+	    } else if (bgr == NULL) {
+		perror("[SERVER] ERROR no image to show");
+	    } else {
+		int response = draw_line(&bgr, msg, connfd);
+		cvNamedWindow(PIC_DISPLAY_NAME, CV_WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
+		cvDisplayStatusBar(PIC_DISPLAY_NAME, img_size_str, 0);
+		cvShowImage(PIC_DISPLAY_NAME, bgr);
+		cvWaitKey(100);
+		if (response < 0) {
+		    perror("[SERVER] ERROR responsing to client");
+		}
+	    }
+	    free(msg);
+	    msg = NULL;
 	    break;
 	}
 	case MY_MSG_REFRESH_DISPLAY:
@@ -136,6 +187,8 @@ int main(int argc, char** argv) {
 		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
+	    free(msg);
+	    msg = NULL;
 	    break;
 	}
 	case MY_MSG_CLOSE_DISPLAY:
@@ -152,10 +205,16 @@ int main(int argc, char** argv) {
 		    perror("[SERVER] ERROR responsing to client");
 		}
 	    }
+	    free(msg);
+	    msg = NULL;
 	    break;
 	}
 	default:
+	{
+	    free(msg);
+	    msg = NULL;
 	    break;
+	}
 	}
 	unix_socket_close(connfd);
     }

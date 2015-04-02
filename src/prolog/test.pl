@@ -1,26 +1,50 @@
 % initialization & exit
 :- dynamic point/3.
+:-
+    set_prolog_stack(global, limit(1*10**9)),
+    set_prolog_stack(local, limit(1*10**9)),
+    set_prolog_stack(trail, limit(1*10**9)),
+    set_prolog_stack(global, spare(2048)),
+    set_prolog_stack(local, spare(2048)),
+    set_prolog_stack(trail, spare(1024)),
+    set_prolog_stack(global, min_free(8192)),
+    set_prolog_stack(local, min_free(2048)),
+    set_prolog_stack(trail, min_free(2048)).
 
-init:-
+load_all_libs:-
     % load primitives
+    ['parameters.pl'],
     ['primitive.pl'],
     ['polygon.pl'],
     ['sampler.pl'],
     ['utils.pl'],
-  
+    ['conjecture.pl'],
+    ['io.pl'],
+    
+    % debug test files
+    ['test_line.pl'].
+
+init:-
+    load_all_libs,
     % start image processor
     load_foreign_library(foreign('img_process.so')),
-    load_img('../../triangle.jpg', _),
-    img_quantize(2).
+    load_img('../../test2.jpg', _),
+    img_quantize(3).
 
-end_prog:-
+halt_prog:-
     img_release,
     writeln('Halt.'),
     halt.
 
-% points
-point(a, 142, 97).
-point(b, 320, 116).
-point(c, 242, 221).
-point(d, 288, 159).
-point(o, 0, 0).
+% test program
+test_go:-
+    display_refresh,
+    sample_conjecture_edges(300, 200, E),
+    display_line_list(E, g),
+    build_polygons(E, P),
+    display_refresh,
+    display_polygon_list(P, r),
+    open('../../test2.pl', write, Out),
+    write_polygons(P, Out, 1),
+    close(Out).
+

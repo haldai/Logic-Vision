@@ -16,6 +16,8 @@ extern int send_size(IplImage* img, MyMessage* msg, int connfd);
 extern int palette_edge_sampler(MyQuantizedImage* quant_img, MyMessage* msg, int connfd);
 extern int quant_point_color(MyQuantizedImage* quant_img, MyMessage* msg, int connfd);
 extern int draw_point(IplImage **img, MyMessage *msg, int connfd);
+extern int draw_line(IplImage **img, MyMessage *msg, int connfd);
+extern int draw_point_list(IplImage **img, MyMessage *msg, int connfd);
 extern int redraw(MyMessage *msg, int connfd);
 extern int exit_display(MyMessage *msg, int connfd);
 

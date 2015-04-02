@@ -63,6 +63,7 @@ IplImage* sub_rect(IplImage* src, CvPoint pos, int width, int height) {
 	src->nChannels
 	);
     cvCopy(interest_rect, re, NULL);
+    cvReleaseImage(&interest_rect);
     return re;
 }
 
@@ -75,6 +76,7 @@ IplImage* sub_circle(IplImage* src, CvPoint center, int rad) {
 	interest_rect->nChannels
 	);
     cvCopy(interest_rect, re, NULL);
+    cvReleaseImage(&interest_rect);
     return re;
 }
 
@@ -93,6 +95,7 @@ IplImage* sub_square(IplImage* src, CvPoint center, int half_width) {
 	interest_rect->nChannels
 	);
     cvCopy(interest_rect, re, NULL);
+    cvReleaseImage(&interest_rect);
     return re;
 }
 

@@ -57,6 +57,9 @@ MyQuantizedImage* kmeansQuantization(IplImage* img, int tableSize) {
     }
     re->colorTable = colorTable;
 
+    cvReleaseMat(&samples);
+    cvReleaseMat(&labels);
+    cvReleaseMat(&centers);
 
     return re;
 }

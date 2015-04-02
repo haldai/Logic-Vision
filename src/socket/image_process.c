@@ -37,10 +37,8 @@ MyQuantizedImage* image_quantize(IplImage* img, MyMessage* msg, int connfd) {
     int backmsg_size = return_message(msg_back, connfd);
     if (backmsg_size < 0) {
 	perror("[SERVER] ERROR sending message to client");
+	return NULL;
     }
-
-
-    
     return quant_img;
 }
 
@@ -51,6 +49,8 @@ int send_size(IplImage* img, MyMessage *msg, int connfd) {
     // return image size
     msg_back->x = img->width;
     msg_back->y = img->height;
+    
+    printf("[IMG] Image size: %d, %d\n", img->width, img->height);
 
     char* buffer = (char *) malloc(sizeof(MyMessage));
     memcpy(buffer, msg_back, sizeof(MyMessage));
@@ -90,7 +90,6 @@ int palette_edge_sampler(MyQuantizedImage* quant_img, MyMessage* msg, int connfd
     buffer = NULL;
     free(msg_back);
     msg_back = NULL;
-
     return backmsg_size;
 }
 
@@ -106,6 +105,24 @@ int draw_point(IplImage **img, MyMessage *msg, int connfd) {
     CvScalar color = msg->scalar;
     CvPoint point = cvPoint(msg->x, msg->y);
     cvCircle(*img, point, 3, color, 2, 8, 0);
+    return return_message(msg_back, connfd);
+}
+
+int draw_point_list(IplImage **img, MyMessage *msg, int connfd) {
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    CvScalar color = msg->scalar;
+    for (int i = 0; i < msg->highlight_point_num; i++) {
+	CvPoint point = cvPoint(msg->highlight_point_x[i], 
+				msg->highlight_point_y[i]);
+	cvCircle(*img, point, 1, color, 2, 8, 0);
+    }
+    return return_message(msg_back, connfd);
+}
+
+int draw_line(IplImage **img, MyMessage *msg, int connfd) {
+    MyMessage *msg_back = myCreateMsg(MY_MSG_MSGGOT);
+    CvScalar color = msg->scalar;
+    cvLine(*img, msg->line_start, msg->line_end, color, 2, 8, 0);
     return return_message(msg_back, connfd);
 }
 

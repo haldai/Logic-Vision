@@ -1,7 +1,6 @@
 % polygon matcher
 
 % polygon definition (with vertex list)
-% line segment can be a degenerated polygon!
 polygon_chk_v(V):-
     length(V, Len),
     Len == 1,
@@ -33,6 +32,14 @@ polygon_chk_xy(V):-
     VV = [V2 | Vs],
     polygon_chk_xy(VV).
 
+% edge quantity of polygon
+edge_numbers(Polygon, N):-
+    polygon(Polygon, Edge_list),
+    !,
+    length(Edge_list, N).
+
+edge_numbers(Polygon, N):-
+    length(Polygon, N).
 
 % triangle (vertex)
 triangle_chk_v(P1, P2, P3):-

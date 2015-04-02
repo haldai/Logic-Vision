@@ -18,7 +18,7 @@ INCLUDE = -I/usr/include/ncurses -I/usr/include/ -I/usr/include/opencv/ -I/usr/i
 CFLAGS = -g -Wall -std=c11 -fPIC `pkg-config --cflags opencv` `pkg-config --cflags Qt5Gui`
 LIBS = -lpthread -lncurses -lm -fPIC `pkg-config --libs opencv` `pkg-config --libs Qt5Gui`
 
-all:test sampler_dir utils_dir socket_dir prolog_dir sampler_dir
+all:sampler_dir utils_dir socket_dir prolog_dir sampler_dir
 
 kmeans:
 	$(CC) $(CFLAGS) kmeans.c -o kmeans $(LIBS)
@@ -26,8 +26,8 @@ kmeans:
 test:test.o sampler_dir utils_dir
 	$(CC) $(CFLAGS) test.o ./sampler/subimg.o ./sampler/sampler.o ./sampler/descriptor.o ./sampler/quantize.o ./utils/utils.o -o test $(LIBS)
 
-test.o:
-	$(CC) $(CFLAGS) -c -o test.o test.c
+#test.o:
+#	$(CC) $(CFLAGS) -c -o test.o test.c
 
 sampler_dir:
 	-make -C ./sampler all

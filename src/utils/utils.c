@@ -88,6 +88,8 @@ IplImage* myReadImg2Lab(char* path) {
 
     cvCvtColor(src32F, img, CV_BGR2Lab);
 
+    cvReleaseImage(&src32F);
+
     return img;
 }
 
@@ -169,7 +171,13 @@ CvScalar myCvMedian(IplImage* img) {
     int medL = quick_select(arrL, n),
 	meda = quick_select(arra, n),
 	medb = quick_select(arrb, n);
+
     CvScalar re = cvScalar(medL, meda, medb, 0);
+
+    cvReleaseMat(&L);
+    cvReleaseMat(&a);
+    cvReleaseMat(&b);
+
     return re;
 }
 
@@ -247,6 +255,9 @@ CvScalar myCvPointANNF(IplImage* img, CvPoint p, int size, double l_channel_weig
 	    }
 	}
     }
+
+    cvReleaseMat(&mat);
+    cvReleaseMat(&d);
 
     return re;
 }

@@ -21,7 +21,7 @@ extern "C" {
 #define MAX_ARG_NUM 10
 #define MAX_ARG_LEN 256
 #define MAX_PALETTE_SIZE 16
-#define MAX_HIGHLIGHT_POINT_SIZE 1000
+#define MAX_HIGHLIGHT_POINT_SIZE 2000
 
 #define SAMPLE_ON_QUANT_IMG 0
 #define SAMPLE_ON_ORG_IMG 1
@@ -41,6 +41,8 @@ extern "C" {
 #define MY_MSG_DRAW_POINT 11
 #define MY_MSG_CLOSE_DISPLAY 12
 #define MY_MSG_REFRESH_DISPLAY 13
+#define MY_MSG_DRAW_LINE 14
+#define MY_MSG_DRAW_POINT_LIST 15
 
 #define PIC_DISPLAY_NAME "HAL9001_MONITOR"
 
@@ -68,7 +70,8 @@ typedef struct {
     int sampler_neighbor_size;
     int sampler_type;
 
-    CvPoint highlight_points[MAX_HIGHLIGHT_POINT_SIZE]; // return points
+    int highlight_point_x[MAX_HIGHLIGHT_POINT_SIZE]; // return points
+    int highlight_point_y[MAX_HIGHLIGHT_POINT_SIZE]; // return points
     // argument for quantification
     int palette_size;
     CvScalar colorTable[MAX_PALETTE_SIZE];

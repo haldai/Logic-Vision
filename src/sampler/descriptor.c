@@ -47,8 +47,11 @@ void myCvReleaseDescriptor(MyCvDescriptor** d) {
 MyCvPalette* myCvCreatePalette(int _length) {
     MyCvPalette* re = malloc(sizeof(MyCvPalette)); 
     re->length = _length;
-    float* pro = (float*) calloc(_length, sizeof(float));
-    CvScalar* ct = (CvScalar*) calloc(_length, sizeof(CvScalar));
+    //float* pro = (float*) calloc(_length, sizeof(float));
+    //CvScalar* ct = (CvScalar*) calloc(_length, sizeof(CvScalar));
+
+    float pro[_length];
+    CvScalar ct[_length];
     
     for (int i = 0; i < _length; i++) {
 	pro[i] = .0;
@@ -62,10 +65,10 @@ MyCvPalette* myCvCreatePalette(int _length) {
 
 void myCvReleasePalette(MyCvPalette** p) {
     if (*p != NULL) {
-	free((*p)->colorTable);
-	free((*p)->proportion);
-	(*p)->proportion = NULL;
-	(*p)->colorTable = NULL;
+//	free((*p)->colorTable);
+//	free((*p)->proportion);
+//	(*p)->proportion = NULL;
+//	(*p)->colorTable = NULL;
 	free(*p);
 	*p = NULL;
     }
@@ -85,6 +88,7 @@ void myCvPixelAvgColorDescriptor(IplImage* img, MyCvDescriptor* _descriptor, CvP
     CvScalar *color = malloc(sizeof(CvScalar));
     *color = cvAvg(subimg, NULL);
     _descriptor->data = color;
+    cvReleaseImage(&subimg);
 }
 
 // get median value of an given image
@@ -126,6 +130,10 @@ CvScalar myCvMedianColor(IplImage* img) {
 	medb = quick_select(arrb, n);
     CvScalar re = cvScalar(medL, meda, medb, 0);
 
+    cvReleaseMat(&L);
+    cvReleaseMat(&a);
+    cvReleaseMat(&b);
+
     return re;
 }
 
@@ -138,6 +146,8 @@ void myCvPixelMedColorDescriptor(IplImage* img, MyCvDescriptor* _descriptor, CvP
     *color = myCvMedianColor(sub_img);
 
     _descriptor->data = color;
+
+    cvReleaseImage(&sub_img);
 }
 
 void myCvPixelPaletteDescriptor(MyQuantizedImage* quant, MyCvDescriptor* _descriptor, CvPoint _pixel, int _neighbor_size) {
