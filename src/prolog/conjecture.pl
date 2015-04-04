@@ -337,20 +337,6 @@ process_edge_subsumption(Edge, Edge_list, Subbed, Rest, Temp_sub, Temp_rest):-
 process_edge_subsumption(Edge, Edge_list, Subbed, Rest):-
     process_edge_subsumption(Edge, Edge_list, Subbed, Rest, [], []).
 
-% get edges ends
-edges_ends(Edges, Ends, Temp):-
-    Edges == [] ->
-	list_to_set(Temp, Ends);
-    (Edges = [Head | Tail],
-     Head = [P1, P2],
-     append(Temp, [P1], Temp_1),
-     append(Temp_1, [P2], Temp_2),
-     edges_ends(Tail, Ends, Temp_2)
-    ).
-
-edges_ends(Edges, Ends):-
-    edges_ends(Edges, Ends, []).
-
 % remove corresponding points and combinations of subsumed edges
 compute_points_to_delete(Subbed, Unsubbed, Del_p):-
     edges_ends(Subbed, S_p),
@@ -648,5 +634,11 @@ build_polygons(Edge_list, Polygons):-
     generate_connected_edge_idx(Edge_list, Idx_list, Edge_list, Conn, []),
     split_components(Edge_list, Idx_list, Conn, Comps, []),
     process_connective_components(Comps, Polygons).
+
+build_connected_components(Edge_list, Comps):-
+    length(Edge_list, Len),
+    findall(Num, between(1, Len, Num), Idx_list),
+    generate_connected_edge_idx(Edge_list, Idx_list, Edge_list, Conn, []),
+    split_components(Edge_list, Idx_list, Conn, Comps, []).
     
 % TODO: remove duplicated edges

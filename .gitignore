@@ -35,3 +35,11 @@ img_client
 
 # Emacs backup files
 *~
+
+# Test data
+*.jpg
+*.JPG
+*.jpeg
+*.JPEG
+triangles*.pl
+test*.pl

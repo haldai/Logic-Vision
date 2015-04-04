@@ -93,13 +93,18 @@ point_on_line_seg_y(X, Y, A, B, C, Y1, Y2):-
      (Y =< Y1, Y >= Y2)
     ).
 
-point_on_line_seg(Point, Seg):-
+% use threshold
+point_on_line_seg_thresh(Point, Seg, T):-
     Seg = [P1, P2],
     distance(Point, P1, D1),
     distance(Point, P2, D2),
     distance(P1, P2, D3),
-    on_seg_thresh(T),
     abs((D1 + D2 - D3)/D3) =< T.
+
+point_on_line_seg(Point, Seg):-
+    on_seg_thresh(T),
+    point_on_line_seg_thresh(Point, Seg, T).
+
     
 % get line parameters from two points
 line_parameters(X1, Y1, X2, Y2, A, B, C):-

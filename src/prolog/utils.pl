@@ -62,6 +62,14 @@ list_not_member(List_1, List_2, Return, Temp):-
 list_not_member(List_1, List_2, Return):-
     list_not_member(List_1, List_2, Return, []).
 
+% odd number and even number
+even(X):-
+    integer(X),
+    0 =:= X mod 2.
+odd(X):-
+    integer(X),
+    1 =:= X mod 2.
+
 % define same line, judged by parameters
 same_line(L1, L2):-
     L1 = [A1, B1, C1],
@@ -120,7 +128,7 @@ display_point(P, C):-
     display_point(X, Y, C),
     !.
 
-% define display_line_of_list/2
+% define display_line_of_list/2, it is a list of all points on this line
 display_line_of_list(Points, C):-
     Points = [Start | _],
     Start = [X1, Y1],
@@ -129,10 +137,12 @@ display_line_of_list(Points, C):-
     display_line(X1, Y1, X2, Y2, C),
     !.
 
+% display line with given start and end points
 display_line(Line, C):-
     Line = [[X1, Y1], [X2, Y2]],
     display_line(X1, Y1, X2, Y2, C).
 
+% display a list of lines
 display_line_list(Line_list, C):-
     (Line_list == [] ->
 	 true;
@@ -331,6 +341,20 @@ combination(N, List, Combs):-
 	     get_elements(Comb_idx, List, Comb_element)),
 	    Combs).
 
+% get end points of all edges in a list
+edges_ends(Edges, Ends, Temp):-
+    Edges == [] ->
+	list_to_set(Temp, Ends);
+    (Edges = [Head | Tail],
+     Head = [P1, P2],
+     append(Temp, [P1], Temp_1),
+     append(Temp_1, [P2], Temp_2),
+     edges_ends(Tail, Ends, Temp_2)
+    ).
+
+edges_ends(Edges, Ends):-
+    edges_ends(Edges, Ends, []).
+
 % define distance of two points
 distance(X1, Y1, X2, Y2, D):-
     D is sqrt((X1 - X2)**2 + (Y1 - Y2)**2).
@@ -372,3 +396,99 @@ in_combo_dist(P1, P2):-
 % same line segment
 same_seg([P1, P2], [P1, P2]).
 same_seg([P1, P2], [P2, P1]).
+
+% randomly sampling a point on canvas edge
+random_point_on_canvas_edge([X, Y]):-
+    img_size(W, H),
+    random_between(0, 3, L), % on which edge
+    (L == 0 -> 
+	 (X is 0, H1 is H - 1, random_between(0, H1, Y), !);
+     (L == 1 -> 
+	  (X is W - 1, H1 is H - 1, random_between(0, H1, Y), !);
+      (L == 2 -> 
+	   (Y is 0, W1 is W - 1, random_between(0, W1, X), !);
+       (L == 3 -> 
+	    (Y is H - 1, W1 is W - 1, random_between(0, W1, X), !);
+	fail
+       )
+      )
+     )
+    ).
+
+% minimum rectangle contains given points
+points_rect([], P_min, P_max, P_min, P_max).
+points_rect([Point | Points], P_min, P_max, Temp_min, Temp_max):-
+    Point = [X, Y],
+    Temp_min = [X_min, Y_min],
+    Temp_max = [X_max, Y_max],
+    (X < X_min -> New_X_min is X; New_X_min is X_min),
+    (Y < Y_min -> New_Y_min is Y; New_Y_min is Y_min),
+    (X > X_max -> New_X_max is X; New_X_max is X_max),
+    (Y > Y_max -> New_Y_max is Y; New_Y_max is Y_max),
+    points_rect(Points, P_min, P_max, [New_X_min, New_Y_min], [New_X_max, New_Y_max]).
+
+poly_rect(Poly, P_min, P_max):-
+    edges_ends(Poly, Points),
+    img_size(W, H),
+    W1 is W - 1,
+    H1 is H - 1,
+    points_rect(Points, P_min, P_max, [W1, H1], [0, 0]).
+
+point_in_rect(P, P_min, P_max):-
+    P = [X, Y],
+    P_min = [X_min, Y_min],
+    P_max = [X_max, Y_max],
+    X =< X_max,
+    X >= X_min,
+    Y =< Y_max,
+    Y >= Y_min.
+
+point_on_polygon_edges(_, []):-
+    fail.
+point_on_polygon_edges(P, [Edge | Edges]):-
+    point_on_line_seg_thresh(P, Edge, 0.001) ->
+	true;
+    point_on_polygon_edges(P, Edges).    
+
+% whether a line segment crosses one of point in list
+line_seg_cross_points(_, []):-
+    fail.
+line_seg_cross_points(Seg, [Point | Points]):-
+    point_on_line_seg_thresh(Point, Seg, 0.001) ->
+	true;
+    line_seg_cross_points(Seg, Points).
+
+% whether a line segment crosses vertices of given polygon
+line_seg_cross_vertices_of_polygon(Seg, Poly):-
+    edges_ends(Poly, Vertices),
+    line_seg_cross_points(Seg, Vertices).
+
+% counting number of intersected points between a ray and polygon
+ray_casting(_, [], N, N).
+ray_casting(Seg, [Edge | Edges], N, Temp):-
+    intersected_seg(Seg, Edge) ->
+	(T2 is Temp + 1,
+	 ray_casting(Seg, Edges, N, T2)
+	);
+    ray_casting(Seg, Edges, N, Temp).
+
+% checks whether a point is inside of a polygon by ray casting
+point_in_polygon(P, Poly):-
+    % display_line_list(Poly, g),
+    % display_point(P, r),
+    ((point_on_polygon_edges(P, Poly), !);
+     (poly_rect(Poly, P_min, P_max), % min rect. box contains polygon
+      point_in_rect(P, P_min, P_max), % point inside of box
+      random_point_on_canvas_edge(R), % random point and random ray
+      % display_line([P, R], b),
+      % writeln(R),
+      (line_seg_cross_vertices_of_polygon([P, R], Poly) -> % if ray cross vertex
+							    point_in_polygon(P, Poly); %  resample a ray
+       true
+      ),
+      ray_casting([P, R], Poly, N, 0),
+      odd(N),
+      !
+     )
+    ).
+ 

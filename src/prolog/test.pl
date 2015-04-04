@@ -28,7 +28,7 @@ init:-
     load_all_libs,
     % start image processor
     load_foreign_library(foreign('img_process.so')),
-    load_img('../../test2.jpg', _),
+    load_img('../../triangles_0.jpg', _),
     img_quantize(3).
 
 halt_prog:-
@@ -41,10 +41,10 @@ test_go:-
     display_refresh,
     sample_conjecture_edges(300, 200, E),
     display_line_list(E, g),
-    build_polygons(E, P),
+    build_connected_components(E, P),
     display_refresh,
     display_polygon_list(P, r),
-    open('../../test2.pl', write, Out),
+    open('../../triangles_2.pl', write, Out),
     write_polygons(P, Out, 1),
     close(Out).
 
