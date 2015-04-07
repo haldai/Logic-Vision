@@ -107,6 +107,8 @@ remove_points_combs(Comb_list, Points, Return):-
     remove_points_combs(Comb_list, Points, Return, []).
 
 % check whether sample line is existed in line list
+line_existed(_, []):-
+    fail.
 line_existed(Line, Line_list):-
     Line_list = [Head | _],
     same_line(Line, Head) ->
@@ -294,6 +296,9 @@ get_coordinates(Point_list, Return):-
 
 % edge subsumption: E1 subsume E2
 edge_subsume(E1, E2):-
+    seg_length(E1, L1),
+    seg_length(E1, L2),
+    L1 >= L2,
     E2 = [P1, P2],
     point_on_line_seg(P1, E1),
     point_on_line_seg(P2, E1).
@@ -369,22 +374,20 @@ sample_edges(Point_list, Ongoing_combs, Edge_list, Temp_list, Sampled_lines, N):
 	 (Edge_list = Temp_list);
      (Ongoing_combs = [Comb | Other_combs],
       Comb = [P1, P2],
-      edges_ends(Temp_list, All_ends),
-      ((member(P1, All_ends),
-	member(P2, All_ends),
-	point_near(P1, P2)
+      line_parameters(Comb, A, B, C),
+      ((point_near(P1, P2);
+	line_existed([A, B, C], Sampled_lines)
        ) ->
 	   (N2 is N + 1,
 	    sample_edges(Point_list, Other_combs, Edge_list, Temp_list, Sampled_lines, N2)
 	   );
-       (line_parameters(Comb, A, B, C),
-	append(Sampled_lines, [[A, B, C]], Sampled_lines_1),
+       (append(Sampled_lines, [[A, B, C]], Sampled_lines_1),
 	display_point_list(Comb, y),
 	P1 = [X1, Y1],
 	P2 = [X2, Y2],
 	(edge_line_seg_proportion(X1, Y1, X2, Y2) ->
 	     (build_edge(X1, Y1, X2, Y2, Edge),
-	      % TODO::if new edge is subsumed by existing edges, continue
+	      % if new edge is subsumed by existing edges, continue
 	      process_edge_subsumption(Edge, Temp_list, Subbed, Unsubbed),
 	      Temp_list_1 = Unsubbed,
 	      (member(Edge, Subbed) ->
@@ -393,13 +396,12 @@ sample_edges(Point_list, Ongoing_combs, Edge_list, Temp_list, Sampled_lines, N):
 		    sample_edges(Point_list, Other_combs, Edge_list, Temp_list_1, Sampled_lines, N2)
 		   );
 	       % if new edge is not subsumed by any existing edge, take it
-	       (remove_subsumed_edges_point_combs(Subbed, Unsubbed, Point_list, 
-						  Other_combs, Point_list_1, Other_combs_1),
+	       (remove_subsumed_edges_point_combs(Subbed, Unsubbed, Point_list, Other_combs, Point_list_1, Other_combs_1),
 		%	     write("Edge: "),
 		%	     print_list([Edge]),
 		% examinate edge duplication
 		display_line(Edge, r),
-		% TODO::do not remove edge ends?
+		% do not remove edge ends?
 		get_points_on_edge(Point_list_1, Temp_list, Edge, On_edge_points, Rest_points),
 		%	     writeln("On edge points: "),
 		%	     print_list(On_edge_points),
@@ -433,6 +435,354 @@ sample_edges(Point_list, Ongoing_combs, Edge_list, Temp_list, Sampled_lines, N):
      )
     ),
     !.
+
+% TODO::sample edges and group them into different components
+sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
+    write("turn "),
+    writeln(N),
+    N2 is N + 1,
+    sample_edge_limit(T),
+    (N > T ->
+	 (Conn_comp_list = Temp_comp_list);
+     (Ongoing_combs = [Comb | Other_combs],
+      Comb = [P1, P2],
+      line_parameters(Comb, A, B, C),
+      ((point_near(P1, P2);
+	line_existed([A, B, C], Sampled_lines)
+       ) -> 
+	    sample_edges(Point_list, Other_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N2);
+       (append(Sampled_lines, [[A, B, C]], Sampled_lines_1),
+	display_point_list(Comb, y),
+	P1 = [X1, Y1],
+	P2 = [X2, Y2],
+	(edge_line_seg_proportion(X1, Y1, X2, Y2) ->
+	     (build_edge(X1, Y1, X2, Y2, Edge),
+	      add_edge(Edge, Temp_comp_list, Temp_comp_list_1, []),
+	      % TODO::find all single connected vertices of each Comp
+	      % TODO::make new combinations
+	      make_new_combs(Temp_comp_list_1, Point_list, Other_combs, New_point_list, New_ongoing_combs), % TODO::
+	      N2 is N + 1,
+	      sample_edges(New_point_list, New_ongoing_combs, Conn_comp_list, Temp_comp_list_1, Sampled_lines_1, N2)
+	     );
+	 % sample new points
+	 (comps_to_edges(Temp_comp_list, Temp_edges),
+	  sample_new_edge_points(X1, Y1, X2, Y2, Temp_edges, Point_list, New_points_),
+	  get_coordinates(New_points_, New_points),
+	  display_point_list(New_points, b),
+	  %      writeln("New points:"),
+	  %      print_list_ln(New_points),
+	  gen_combs(New_points, Point_list, Sampled_lines, Comb_list),
+	  append(Other_combs, Comb_list, Comb_list_1),
+	  append(Point_list, New_points, Point_list_3),
+	  N2 is N + 1,
+	  sample_edges(Point_list_3, Comb_list_1, Conn_comp_list, Temp_comp_list, Sampled_lines_1, N2)
+	 )
+	)
+       )
+      )
+     )
+    ),
+    !.
+
+% TODO::generate new combinations
+make_new_combs(Comp_list, PL_old, Combs_old, PL_new, Combs_new):-
+    fail.
+
+add_edge(Edge, [], Return, Temp, []):-
+    append(Temp, [Edge], Return), !.
+add_edge(Edge, [], Return, Temp, New_comps):-
+    merge_conn_comps(Edge, New_comps, New_comp),
+    append(Temp, [New_comp], Return).
+add_edge(Edge, [Comp | Comps], Return, Temp, New_comps):-
+    edge_connect_to_comp(Edge, Comp) ->
+	(append(New_comps, [Comp], New_comps_2),
+	 add_edge(Edge, Comps, Return, Temp, New_comps_2)
+	);
+    (append(Temp, [Comp], Temp_2),
+     add_edge(Edge, Comps, Return, Temp_2, New_comps)
+    ),
+    !.
+
+merge_conn_comps(Edge, Comps, Return):-
+    length(Comps, L),
+    L < 1,
+    Return = [[Edge]].
+merge_conn_comps(Edge, Comps, Return):-
+    comps_to_edges(Comps, All_edges, []),
+    % Process edge-subsumed edges
+    process_edge_edge_subsumption(New_edge, New_other_edges, Subed_edges),
+    % edge is subed by existing edge, no change
+    (member(Edge, Subed_edges) ->
+	 Return = All_edges;
+     % edge cannot be subed, continue
+     (merge_edge_with_all_edges(Edge, All_edges, Merged_edges),
+      % merge_all_edges(All_edges, All_edges, Return),
+      Merged_edges = [New_edge | New_other_edges],
+      % Process point-subsumed edges (point_on_line_seg(_,_,T>TT), Xy<T<Xy)
+      process_point_edge_subsumption(New_edge, New_other_edges, New_other_edges_1),
+      Return = New_other_edges_1
+     )
+    ).
+
+% vertex subsume edge or edge subsume vertex
+process_point_edge_subsumption(Edge, Other_edges, Return):-
+    edges_ends(Other_edges, Vertices),
+    process_point_edge_subsumption(Edge, Vertices, RM_p, RM_e, [], []),
+    % edge not subsumed
+    (RM_e == [] ->
+	 % no point subsumed
+	 (RM_p == [] ->
+	      append([Edge], Other_edges, Return);
+	  % TODO:: remove points
+	  remove_edge_subsumed_points(Edge, Other_edges, RM_p, Return)
+	 );
+     % edge subsumed
+     Return = Other_edges
+    ).
+
+remove_edge_subsumed_points(Edge, Other_edges, [], Return):-
+    append([Edge], Other_edges, Return).
+remove_edge_subsumed_points(Edge, Other_edges, [P | Ps], Return):-
+    all_edges_contains_point(Other_edges, P, All_edges),
+    get_all_intersections(Edge, All_edges, All_intscts, []),
+    intersection_all_edges(All_intscts, All_intsct_edges, []),
+    list_delete(Other_edges, All_intsct_edges, Rest_edges),
+    % cut the intersected edges by Edge at P
+    cut_edges(All_intsct_edges, Edge, P, New_edges, []),
+    append(New_edges, Rest_edges, New_edges_1),
+    remove_edge_subsumed_points(Edge, New_edges_1, Ps, Return).
+
+cut_edges([], _, _, Return, Return).
+cut_edges([E | Es], Edge, P, Return, Temp):-
+    E = [PP, P],
+    Edge = [P1, P2],
+    (point_on_line_seg_thresh(P1, E, 0.01) ->
+	 (append([[PP, P1]], Temp, Temp_1),
+	  cut_edges(Es, Edge, P, Return, Temp_1)
+	 );
+     (append([[PP, P2]], Temp, Temp_1),
+      cut_edges(Es, Edge, P, Return, Temp_1)
+     )
+    ).
+cut_edges([E | Es], Edge, P, Return, Temp):-
+    E = [P, PP],
+    Edge = [P1, P2],
+    (point_on_line_seg_thresh(P1, E, 0.01) ->
+	 (append([[PP, P1]], Temp, Temp_1),
+	  cut_edges(Es, Edge, P, Return, Temp_1)
+	 );
+     (append([[PP, P2]], Temp, Temp_1),
+      cut_edges(Es, Edge, P, Return, Temp_1)
+     )
+    ).
+cut_edges([E | Es], Edge, P, Return, Temp):-
+    not(E = [PP, P]),
+    not(E = [P, PP]),
+    append([E], Temp, Temp_1),
+    cut_edges(Es, Edge, P, Return, Temp_1).
+
+all_edges_contains_point([], _, Return, Return).
+all_edges_contains_point([E | Es], P, Return, Temp):-
+    (member(P, E) ->
+	 append(Temp, [E], Temp_1);
+     Temp_1 = Temp
+    ),
+    all_edges_contains_point(Es, P, Return, Temp_1).
+
+process_point_edge_subsumption(_, [], RM_p, RM_e, Temp_p, Temp_e):-
+    RM_p = Temp_p,
+    RM_e = Temp_e.
+process_point_edge_subsumption(Edge, [V | Vs], RM_p, RM_e, Temp_p, Temp_e):-
+    poly_rect([Edge], P_min, P_max),
+    P_min = [X_min, Y_min],
+    P_max = [X_max, Y_max],
+    V = [X, Y],
+    % vertex lies between edge
+    ((((X =< X_max, X >= X_min); (Y =< Y_max, Y >= Y_min)),
+      % vertex "on" edge
+      point_on_line_seg_thresh(V, Edge, 0.3)) ->
+	 (avg_grad_val_seg(Edge, Ve),
+	  Edge = [P1, P2],
+	  avg_grad_val_seg([P1, V], V1),
+	  avg_grad_val_seg([P2, V], V2),
+	  % if grad value of point is lower than edge
+	  ((V1 + V2)/2 =< Ve ->
+	       % remove point
+	       (append([V], Temp_p, Temp_p_1),
+		process_point_edge_subsumption(Edge, Vs, RM_p, RM_e, Temp_p_1, Temp_e)
+	       );
+	   % remove edge
+	   (RM_p = [],
+	    RM_e = Edge
+	   )
+	  )
+	 );
+     process_point_edge_subsumption(Edge, Vs, RM_p, RM_e, Temp_p, Temp_e)
+    ).
+
+% edge subsume edge
+process_edge_edge_subsumption(Edge, [], Return, Temp):-
+    append([Edge], Temp, Return).
+process_edge_edge_subsumption(Edge, [E | Es], Return, Temp):-
+    not(edge_subsume(E, Edge)), 
+    not(edge_subsume(Edge, E)),
+    append([E], Temp, Temp_1),
+    process_edge_edge_subsumption(Edge, Es, Return, Temp_1).
+process_edge_edge_subsumption(Edge, [E | Es], Return, Temp):-
+    edge_subsume(E, Edge), 
+    not(edge_subsume(Edge, E)),
+    append([E, Es], Temp, Return).
+process_edge_edge_subsumption(Edge, [E | Es], Return, Temp):-
+    edge_subsume(Edge, E), 
+    not(edge_subsume(E, Edge)),
+    process_edge_edge_subsumption(Edge, Es, Return, Temp).
+process_edge_edge_subsumption(Edge, [E | Es], Return, Temp):-
+    edge_subsume(Edge, E), 
+    edge_subsume(E, Edge),
+    avg_grad_val_seg(Edge, V1),
+    avg_grad_val_seg(E, V2),
+    (V1 >= V2 ->
+	 process_edge_edge_subsumption(Edge, Es, Return, Temp);
+     append([E, Es], Temp, Return)
+    ).
+
+
+merge_edge_with_all_edges(Edge, Other_edges, Return):-
+    % process Edge
+    get_all_intersections(Edge, Other_edges, All_intscts, []),
+    intersection_all_points(All_intscts, All_intsct_pts, []),
+    length(All_intsct_pts, L_int_pts),
+    % if only one intersected point, we should decide which node to be removed
+    (L_int_pts == 1 ->
+	 (All_intsct_pts = [IP | _],
+	  All_intscts = [[IE | _] | _],
+	  Edge = [P1, P2],
+	  avg_grad_val([P1, IP], V1),
+	  avg_grad_val([P2, IP], V2),
+	  (V1 > V2 ->
+	       New_edge = [P1, IP];
+	   New_edge = [IP, P2]
+	  ),
+	  delete(Other_edges, IE, Rest_edges),
+	  length(Rest_edges, L_r),
+	  % IE is the only edge in this component
+	  (L_r == 0 ->
+	       (IE = [PE1, PE2],
+		avg_grad_val_seg([PE1, IP], VE1),
+		avg_grad_val_seg([PE2, IP], VE2),
+		(VE1 > VE2 ->
+		     New_ie = [PE1, IP];
+		 New_ie = [IP, PE2]
+		),
+		Return = [New_edge, New_ie]
+	       );
+	   % there are other edges
+	   (edges_ends(Rest_edges, Rest_vertices),
+	    IE = [PE1, PE2],
+	    (member(PE1, Rest_vertices) ->
+		 New_ie = [PE1, IP];
+	     (member(PE2, Rest_vertices) ->
+		  New_ie = [PE2, IP];
+	      (avg_grad_val_seg([PE1, IP], VE1),
+	       avg_grad_val_seg([PE2, IP], VE2),
+	       (VE1 > VE2 ->
+		    New_ie = [PE1, IP];
+		New_ie = [IP, PE2]
+	       )
+	      )
+	     )
+	    ),
+	    append([New_edge, New_ie], Rest_edges, Return)
+	   )
+	  )
+	 );
+     % if more than 1 intersected points, just remove left and right most ends
+     (get_left_right_most_points_in_list(All_intsct_pts, Left, Right),
+      New_edge = [Left, Right],
+      append([New_edge], Other_edges, Temp_edges_1),
+      % process the edges that intersected with Edge
+      readjust_intersected_edges(All_intscts, Temp_edges_1, Adjd_edges, []),
+      intersection_all_edges(All_intscts, All_intsct_edgs, []),
+      list_delete(Temp_edges_1, All_intsct_edgs, Temp_edges_2),
+      append(Temp_edges_2, Adjd_edges, Return)
+     )
+    ).
+
+readjust_intersected_edges([], _, Return, Return).
+readjust_intersected_edges([I | Intscts], All_edges, Return, Temp):-
+    I = [E, Points],
+    delete(All_edges, E, Other_edges),
+    get_all_intersections(E, Other_edges, All_intscts, []),
+    intersection_all_points(All_intscts, All_intsct_pts, []),
+    append(Points, All_intsct_pts, All_intsct_pts_1),
+    get_left_right_most_points_in_list(All_intsct_pts_1, L, R),
+    New_edge = [L, R],
+    append(Temp, [New_edge], Temp_1),
+    readjust_intersected_edges(Intscts, All_edges, Return, Temp_1).
+
+merge_all_edges([], _, Return, Return).
+merge_all_edges([Edge | Edges], All_edges, Return, Temp):-
+    delete(All_edges, Edge, Other_edges),
+    get_all_intersections(Edge, Other_edges, All_intersections, []),
+    intersection_all_points(All_intersections, All_intsct_pts, []),
+    get_left_right_most_points_in_list(All_intsct_pts, Left, Right),
+    New_edge = [Left, Right],
+    append(Temp, [New_edge], Temp_1),
+    delete(All_edges, Edge, All_edges_1),
+    append([New_edge], All_edges_1, All_edges_2),
+    merge_all_edges(Edges, All_edges_2, Return, Temp_1).
+    
+% obtain all intersected points in [[E1, P1], [E2, P2], ...]
+intersection_all_points([], Return, Return).
+intersection_all_points([EP | EPs], Return, Temp):-
+    EP = [_, Points],
+    append(Temp, Points, Temp_1),
+    intersection_all_points(EPs, Return, Temp_1).
+
+intersection_all_edges([], Return, Return).
+intersection_all_edgss([EP | EPs], Return, Temp):-
+    EP = [Edge, _],
+    append(Temp, Edge, Temp_1),
+    intersection_all_edges(EPs, Return, Temp_1).
+
+% get all intersections between a line seg (edge) and all other line segs
+% Return = [[E1, P1], [E2, P2], ...]
+get_all_intersections(_, [], Return, Return).
+get_all_intersections(Edge, [E | Es], Return, Temp):-
+    intersected_seg(Edge, E, Points),
+    (Points == [] ->
+	 % intersected
+	 (append(Temp, [[E, Points]], Temp_1),
+	  get_all_intersections(Edge, Es, Return, Temp_1)
+	 );
+     % near
+     line_parameters(Edge, A1, B1, C1),
+     line_parameters(E, A2, B2, C2),
+     intersected_lines([A1, B1, C1], [A2, B2, C2], Points_1),
+     append(Temp, [[E, Points_1]], Temp_1),
+     get_all_intersections(Edge, Es, Return, Temp_1)
+    ),
+    !.
+    
+comps_to_edges([], Return, Return).
+comps_to_edges([Comp | Comps], Return, Temp):-
+	append(Temp, Comp, Temp_1),
+	comps_to_edges(Comps, Return, Temp_1).
+edge_connect_to_comp(_, []):-
+    fail.
+edge_connect_to_comp(Edge, [E | Edges]):-
+    intersected_or_near(Edge, E) ->
+	true;
+    edge_connect_to_comp(Edge, Edges).
+
+edge_connect_to_comp_edges(_, [], Return, Temp):-
+    Return = Temp.
+edge_connect_to_comp_edges(Edge, [E | Edges], Return, Temp):-
+    intersected_or_near(Edge, E) ->
+	(append(Temp, [E], Temp_2),
+	 edge_connect_to_comp_edges(Edge, [E | Edges], Return, Temp_2)
+	);
+    edge_connect_to_comp_edges(Edge, Edges, Return, Temp).
 
 % connect ends and examinate new edges whether it exists or subsumed
 edge_existed_in_list(Edge, Edge_list):-
@@ -608,6 +958,10 @@ process_duplicate_edges(Edge_list, New_edges):-
     edges_ends(Edge_list, All_ends),
     remove_duplicate_end_edges(All_ends, Edge_list, New_edges, []).
 
+add_new_edges_in_connective_components(Comp, New_comp):-
+    connect_ends(Comp, New_edges_1),
+    append(Comp, New_edges_1, New_comp).
+
 process_connective_component(Comp, New_comp):-
     process_intersection(Comp, New_edges_1),
     connect_ends(New_edges_1, New_edges_2),
@@ -619,7 +973,8 @@ process_connective_components(Comps, Polygons, Temp):-
     Comps == [] ->
 	Polygons = Temp;
     (Comps = [Head | Tail],
-     process_connective_component(Head, New_comp),
+     % process_connective_component(Head, New_comp),
+     add_new_edges_in_connective_components(Head, New_comp),
      append(Temp, [New_comp], Temp_2),
      process_connective_components(Tail, Polygons, Temp_2)
     ).
@@ -639,6 +994,7 @@ build_connected_components(Edge_list, Comps):-
     length(Edge_list, Len),
     findall(Num, between(1, Len, Num), Idx_list),
     generate_connected_edge_idx(Edge_list, Idx_list, Edge_list, Conn, []),
-    split_components(Edge_list, Idx_list, Conn, Comps, []).
+    split_components(Edge_list, Idx_list, Conn, Comps_temp, []),
+    process_connective_components(Comps_temp, Comps).
     
 % TODO: remove duplicated edges

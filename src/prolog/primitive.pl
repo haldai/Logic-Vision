@@ -224,6 +224,22 @@ inside_points_rec(X1, Y1, X2, Y2, N, Inside_points):-
      Inside_points = Temp_points2
     ).
 
+avg_grad_val_seg(Seg, Value):-
+    sample_line_seg(Seg, Point_list),
+    avg_grad_val_point_list(Point_list, Value).
+
+avg_grad_val_point_list([], Return, Len, Sum):-
+    Return is Sum/Len.
+avg_grad_val_point_list([P | Ps], Return, Len, Sum):-
+    P = [X, Y],
+    edge_point(X, Y, V, _),
+    Sum_1 is Sum + V,
+    avg_grad_val_point_list(Ps, Return, Len, Sum_1).
+
+avg_grad_val_point_list(Point_list, Return):-
+    length(Point_list, Len),
+    avg_grad_val_point_list(Point_list, Return, Len, 0.0).
+    
 % proportion of edge points inside of a point list
 edge_points_proportion(Point_list, Proportion):-
     length(Point_list, N),

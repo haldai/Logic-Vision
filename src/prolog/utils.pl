@@ -263,12 +263,110 @@ intersected_seg(S1, S2, Points):-
 	);
     Points = [].
 
+% intersected points of line L1 and L2
+intersected_lines(L1, L2, Points):-
+    L1 = [A1, B1, C1],
+    L2 = [A2, B2, C2],
+    D is A1*B2 - A2*B1,
+    (D == 0 ->
+	 (sample_line(A1, B1, C1, PL1),
+	  sample_line(A2, B2, C2, PL2),
+	  findall(P, (member(P, PL1), member(P, PL2)), Points)
+	 );
+     (Dx is -(C1*B2 - C2*B1),
+      Dy is (C1*A2 - C2*A1),
+      X is truncate(Dx/D + 0.5),
+      Y is truncate(Dy/D + 0.5),
+      Points = [[X, Y]]
+     )
+    ).
+
 % last element of list
 last_ele(List, X):-
     List == []
     ->
 	X = [];
     last(List, X).
+
+% most left and most right points; most upward and downward points
+get_left_right_most_points_in_list([], Left, Right, Left, Right).
+get_left_right_most_points_in_list([P | Ps], Left, Right, Temp_left, Temp_right):-
+    Temp_left = [L | _],
+    Temp_right = [R | _],
+    L = [X_l, _],
+    R = [X_r, _],
+    P = [X_p, _],
+    (X_p < X_l ->
+	 (Temp_left_1 = [P], Temp_right_1 = Temp_right);
+     (X_p > X_r ->
+	  (Temp_right_1 = [P], Temp_left_1 = Temp_left);
+      ((X_p == X_l, X_p == X_r) ->
+	   (append(Temp_left, [P], Temp_left_1), 
+	    append(Temp_right, [P], Temp_right_1)
+	   );
+       ((X_p == X_l, X_p < X_r) ->
+	    (append(Temp_left, [P], Temp_left_1),
+	     Temp_right_1 = Temp_right
+	    );
+	((X_p == X_r, X_p > X_l) ->
+	     (append(Temp_right, [P], Temp_right_1),
+	      Temp_left_1 = Temp_left
+	     );
+	 (Temp_left_1 = Temp_left, Temp_right_1 = Temp_right)
+	)
+       )
+      )
+     )
+    ),
+    get_left_right_most_points_in_list(Ps, Left, Right, Temp_left_1, Temp_right_1).
+
+get_up_most_point([], Return, Return).
+get_up_most_point([P | Ps], Return, Temp):-
+    P = [_, Y_p],
+    Temp = [_, Y_t],
+    (Y_p < Y_t -> 
+	 Temp_1 = P;
+     Temp_1 = Temp
+    ),
+    get_up_most_point(Ps, Return, Temp_1).
+
+get_down_most_point([], Return, Return).
+get_down_most_point([P | Ps], Return, Temp):-
+    P = [_, Y_p],
+    Temp = [_, Y_t],
+    (Y_p > Y_t -> 
+	 Temp_1 = P;
+     Temp_1 = Temp
+    ),
+    get_down_most_point(Ps, Return, Temp_1).
+
+get_left_right_most_points_in_list(Point_list, Left, Right):-
+    img_size(W, H),
+    get_left_right_most_points_in_list(Point_list, L, R, [[W, H]], [[-1, -1]]),
+    get_up_most_point(L, [L_u_x, L_u_y], [W, H]),
+    get_up_most_point(R, [R_u_x, R_u_y], [-1, H]),
+    get_down_most_point(L, [L_d_x, L_d_y], [W, -1]),
+    get_down_most_point(R, [R_d_x, R_d_y], [-1, -1]),
+    length(L, L_l),
+    length(R, L_r),
+    ((L_l == 1, L_r == 1) ->
+	 (L = [Left | _],
+	  R = [Right | _]
+	 );
+     (L_d_y > R_d_y -> % left down's position is lower than right down's
+	   (Left = [L_d_x, L_d_y],
+	    Right = [R_u_x, R_u_y]
+	   );
+       (L_u_y < R_u_y -> % left up's position is higher than right up's
+	    (Left = [L_u_x, L_u_y],
+	     Right = [R_d_x, R_d_y]
+	    );
+	(Left = [L_u_x, L_u_y],
+	 Right = [R_d_x, R_d_y]
+	)
+       )
+      )
+     ).
 
 % from point list get continuous intervals
 continuous_intervals(Point_list, Temp_interval_list, Buff, Interval_list):-
@@ -491,4 +589,3 @@ point_in_polygon(P, Poly):-
       !
      )
     ).
- 

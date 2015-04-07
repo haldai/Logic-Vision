@@ -28,7 +28,7 @@ init:-
     load_all_libs,
     % start image processor
     load_foreign_library(foreign('img_process.so')),
-    load_img('../../triangles_0.jpg', _),
+    load_img('../../triangles_1.jpg', _),
     img_quantize(3).
 
 halt_prog:-
@@ -44,7 +44,7 @@ test_go:-
     build_connected_components(E, P),
     display_refresh,
     display_polygon_list(P, r),
-    open('../../triangles_2.pl', write, Out),
+    open('../../triangles_1.upl', write, Out),
     write_polygons(P, Out, 1),
     close(Out).
 
