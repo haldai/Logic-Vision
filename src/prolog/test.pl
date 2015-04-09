@@ -39,12 +39,12 @@ halt_prog:-
 % test program
 test_go:-
     display_refresh,
-    sample_conjecture_edges(300, 200, E),
-    display_line_list(E, g),
-    build_connected_components(E, P),
-    display_refresh,
-    display_polygon_list(P, r),
-    open('../../triangles_1.upl', write, Out),
-    write_polygons(P, Out, 1),
-    close(Out).
+    sample_conjecture_edges_1(300, 200, E),
+    display_line_list(E, g).
+%    build_connected_components(E, P),
+%    display_refresh,
+%    display_polygon_list(P, r),
+%    open('../../triangles_1.upl', write, Out),
+%    write_polygons(P, Out, 1),
+%    close(Out).
 

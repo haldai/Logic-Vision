@@ -8,7 +8,14 @@ sample_conjecture_edges(X, Y, Edge_list):-
     get_coordinates(All_edge_points, All_edge_points_coor),
     combination(2, All_edge_points_coor, Init_combs),
     sample_edges(All_edge_points_coor, Init_combs, Edge_list, [], [], 1).
-    
+
+sample_conjecture_edges_1(X, Y, Conn_comp_list):-
+    sample_line_on_point(X, Y, Line_point_list),
+    edge_points_in_point_list(Line_point_list, Edge_point_list),
+    clearest_edge_points_mid(Edge_point_list, All_edge_points),
+    get_coordinates(All_edge_points, All_edge_points_coor),
+    combination(2, All_edge_points_coor, Init_combs),
+    sample_edges_components(All_edge_points_coor, Init_combs, Conn_comp_list, [], [], 1).
 
 % build an edge on given line segment
 % split line (point list) into two parts
@@ -458,14 +465,14 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
 	(edge_line_seg_proportion(X1, Y1, X2, Y2) ->
 	     (build_edge(X1, Y1, X2, Y2, Edge),
 	      add_edge(Edge, Temp_comp_list, Temp_comp_list_1, []),
-	      % TODO::find all single connected vertices of each Comp
-	      % TODO::make new combinations
-	      make_new_combs(Temp_comp_list_1, Point_list, Other_combs, New_point_list, New_ongoing_combs), % TODO::
+	      % find all single connected vertices of each Comp
+	      % & make new combinations
+	      make_new_combs(Edge, Temp_comp_list_1, Temp_comp_list, Point_list, Other_combs, Sampled_lines, New_point_list, New_ongoing_combs), % TODO::
 	      N2 is N + 1,
 	      sample_edges(New_point_list, New_ongoing_combs, Conn_comp_list, Temp_comp_list_1, Sampled_lines_1, N2)
 	     );
 	 % sample new points
-	 (comps_to_edges(Temp_comp_list, Temp_edges),
+	 (comps_to_edges(Temp_comp_list, Temp_edges, []),
 	  sample_new_edge_points(X1, Y1, X2, Y2, Temp_edges, Point_list, New_points_),
 	  get_coordinates(New_points_, New_points),
 	  display_point_list(New_points, b),
@@ -485,8 +492,25 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
     !.
 
 % TODO::generate new combinations
-make_new_combs(Comp_list, PL_old, Combs_old, PL_new, Combs_new):-
-    fail.
+make_new_combs(Edge, Comp_list, Comp_list_old, PL_old, Combs_old, Sampled_lines, PL_new, Combs_new):-
+    combs_to_edges(Comp_list, Edges_new, []),
+    combs_to_edges(Comp_list_old, Edges_old, []),
+    edges_ends(Edges_new, PL_end_new),
+    edges_ends(Edges_old, PL_end_old),
+    list_delete(PL_end_new, PL_end_old, PL_end_added), % added ends
+    list_delete(PL_old, PL_end_old, PL_free), % free points (not on edges)
+    list_delete(PL_end_old, PL_end_new, PL_end_removed), % removed ends
+    intersections(PL_end_old, PL_end_new, PL_end_remains), % remained ends
+    get_points_on_edge(PL_free, Edges_new, Edge, PL_free_removed, PL_free_remains), % remove free points
+    append(PL_end_removed, PL_free_removed, PL_removed),
+    append(PL_free_remains, PL_end_new, PL_new),
+    % remove old combinations
+    remove_points_combs(Combs_old, PL_removed, Comb_r_list),
+    % generate new combinations
+    gen_combs(PL_end_added, PL_end_remains, Sampled_lines, Comb_e_e_AR), %TODO:
+    gen_combs(PL_end_added, PL_free_remains, Sampled_lines, Comb_f_e_AR), %TODO
+    append(Comb_e_e_AR, Comb_f_e_AR, Combs_1),
+    append(Combs_1, Comb_r_list, Combs_new).
 
 add_edge(Edge, [], Return, Temp, []):-
     append(Temp, [Edge], Return), !.
@@ -996,5 +1020,5 @@ build_connected_components(Edge_list, Comps):-
     generate_connected_edge_idx(Edge_list, Idx_list, Edge_list, Conn, []),
     split_components(Edge_list, Idx_list, Conn, Comps_temp, []),
     process_connective_components(Comps_temp, Comps).
-    
+
 % TODO: remove duplicated edges

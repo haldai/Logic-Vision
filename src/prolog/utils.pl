@@ -26,7 +26,8 @@ list_delete(List, [], List).
 list_delete(List, Del_list, Out_list):-
     Del_list = [Head | Tail],
     delete(List, Head, List_2),
-    list_delete(List_2, Tail, Out_list).
+    list_delete(List_2, Tail, Out_list),
+    !.
 
 % list add without duplication
 list_add_nodup(L, [], L).
