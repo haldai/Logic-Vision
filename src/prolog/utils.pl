@@ -343,7 +343,20 @@ get_down_most_point([P | Ps], Return, Temp):-
 
 get_left_right_most_points_in_list(Point_list, Left, Right):-
     img_size(W, H),
-    get_left_right_most_points_in_list(Point_list, L, R, [[W, H]], [[-1, -1]]),
+    Point_list = [F, S | Tail],
+    F = [X_1, Y_1],
+    S = [X_2, Y_2],
+    (X_1 < X_2 ->
+	 (L_ = F, R_ = S);
+     (X_1 > X_2 ->
+	  (L_ = S, R_ = F);
+      (Y_1 < Y_2 ->
+	   (L_ = F, R_ = S);
+       (L_ = S, R_ = F)
+      )
+     )
+    ),
+    get_left_right_most_points_in_list(Tail, L, R, [L_], [R_]),
     get_up_most_point(L, [L_u_x, L_u_y], [W, H]),
     get_up_most_point(R, [R_u_x, R_u_y], [-1, H]),
     get_down_most_point(L, [L_d_x, L_d_y], [W, -1]),
@@ -491,6 +504,12 @@ in_combo_dist(P1, P2):-
     image_diagonal(Dia),
     combo_dist_thresh(T),
     D/Dia =< T.
+
+in_combo_dist(P1, P2, T):-
+    distance(P1, P2, D),
+    image_diagonal(Dia),
+    D/Dia =< T.
+
 
 % same line segment
 same_seg([P1, P2], [P1, P2]).
