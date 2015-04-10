@@ -224,6 +224,7 @@ inside_points_rec(X1, Y1, X2, Y2, N, Inside_points):-
      Inside_points = Temp_points2
     ).
 
+avg_grad_val_seg([P, P], 0.0).
 avg_grad_val_seg(Seg, Value):-
     sample_line_seg(Seg, Point_list),
     avg_grad_val_point_list(Point_list, Value).

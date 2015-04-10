@@ -565,7 +565,8 @@ add_edge(Edge, [Comp | Comps], Return, Temp, New_comps):-
 merge_conn_comps(Edge, Comps, Return):-
     length(Comps, L),
     L < 1,
-    Return = [Edge].
+    Return = [Edge],
+    !.
 merge_conn_comps(Edge, Comps, Return):-
     comps_to_edges(Comps, All_edges, []),
     % Process edge-subsumed edges
@@ -578,10 +579,11 @@ merge_conn_comps(Edge, Comps, Return):-
       % merge_all_edges(All_edges, All_edges, Return),
       Merged_edges = [New_edge | New_other_edges],
       % Process point-subsumed edges (point_on_line_seg(_,_,T>TT), Xy<T<Xy)
-      process_point_edge_subsumption(New_edge, New_other_edges, New_other_edges_1),
-      Return = New_other_edges_1
+%      process_point_edge_subsumption(New_edge, New_other_edges, New_other_edges_1),
+      Return = Merged_edges
      )
-    ).
+    ),
+    !.
 
 % vertex subsume edge or edge subsume vertex
 process_point_edge_subsumption(Edge, Other_edges, Return):-
@@ -597,7 +599,8 @@ process_point_edge_subsumption(Edge, Other_edges, Return):-
 	 );
      % edge subsumed
      Return = Other_edges
-    ).
+    ),
+    !.
 
 remove_edge_subsumed_points(Edge, Other_edges, [], Return):-
     append([Edge], Other_edges, Return).
@@ -622,7 +625,8 @@ cut_edges([E | Es], Edge, P, Return, Temp):-
      (append([[PP, P2]], Temp, Temp_1),
       cut_edges(Es, Edge, P, Return, Temp_1)
      )
-    ).
+    ),
+    !.
 cut_edges([E | Es], Edge, P, Return, Temp):-
     E = [P, PP],
     Edge = [P1, P2],
@@ -633,7 +637,8 @@ cut_edges([E | Es], Edge, P, Return, Temp):-
      (append([[PP, P2]], Temp, Temp_1),
       cut_edges(Es, Edge, P, Return, Temp_1)
      )
-    ).
+    ),
+    !.
 cut_edges([E | Es], Edge, P, Return, Temp):-
     not(E = [PP, P]),
     not(E = [P, PP]),
@@ -646,12 +651,16 @@ all_edges_contains_point([E | Es], P, Return, Temp):-
 	 append(Temp, [E], Temp_1);
      Temp_1 = Temp
     ),
-    all_edges_contains_point(Es, P, Return, Temp_1).
+    all_edges_contains_point(Es, P, Return, Temp_1), !.
 
 process_point_edge_subsumption(_, [], RM_p, RM_e, Temp_p, Temp_e):-
     RM_p = Temp_p,
-    RM_e = Temp_e.
+    RM_e = Temp_e,
+    !.
+
+% TODO::
 process_point_edge_subsumption(Edge, [V | Vs], RM_p, RM_e, Temp_p, Temp_e):-
+    Edge = [P1, P2],
     poly_rect([Edge], P_min, P_max),
     P_min = [X_min, Y_min],
     P_max = [X_max, Y_max],
@@ -663,7 +672,6 @@ process_point_edge_subsumption(Edge, [V | Vs], RM_p, RM_e, Temp_p, Temp_e):-
       % vertex "on" edge
       point_on_line_seg_thresh(V, Edge, 0.3)) ->
 	 (avg_grad_val_seg(Edge, Ve),
-	  Edge = [P1, P2],
 	  avg_grad_val_seg([P1, V], V1),
 	  avg_grad_val_seg([P2, V], V2),
 	  % if grad value of point is lower than edge
@@ -679,27 +687,32 @@ process_point_edge_subsumption(Edge, [V | Vs], RM_p, RM_e, Temp_p, Temp_e):-
 	  )
 	 );
      process_point_edge_subsumption(Edge, Vs, RM_p, RM_e, Temp_p, Temp_e)
-    ).
+    ),
+    !.
 
 % edge subsume edge
 process_edge_edge_subsumption(_, [], Subbed, Unsubbed, Temp_s, Temp_u):-
     Unsubbed = Temp_u,
-    Subbed = Temp_s.
+    Subbed = Temp_s,
+    !.
 process_edge_edge_subsumption(Edge, [E | Es], Subbed, Unsubbed, Temp_s, Temp_u):-
     not(edge_subsume(E, Edge)), 
     not(edge_subsume(Edge, E)),
     append([E], Temp_u, Temp_u_1),
-    process_edge_edge_subsumption(Edge, Es, Subbed, Unsubbed, Temp_s, Temp_u_1).
+    process_edge_edge_subsumption(Edge, Es, Subbed, Unsubbed, Temp_s, Temp_u_1), 
+    !.
 process_edge_edge_subsumption(Edge, [E | Es], Subbed, Unsubbed, Temp_s, Temp_u):-
     edge_subsume(E, Edge), 
     not(edge_subsume(Edge, E)),
     append([E, Es], Temp_u, Unsubbed),
-    append([Edge], Temp_s, Subbed).
+    append([Edge], Temp_s, Subbed),
+    !.
 process_edge_edge_subsumption(Edge, [E | Es], Subbed, Unsubbed, Temp_s, Temp_u):-
     edge_subsume(Edge, E), 
     not(edge_subsume(E, Edge)),
     append([E], Temp_s, Temp_s_1),
-    process_edge_edge_subsumption(Edge, Es, Subbed, Unsubbed, Temp_s_1, Temp_u).
+    process_edge_edge_subsumption(Edge, Es, Subbed, Unsubbed, Temp_s_1, Temp_u),
+    !.
 process_edge_edge_subsumption(Edge, [E | Es], Subbed, Unsubbed, Temp_s, Temp_u):-
     edge_subsume(Edge, E), 
     edge_subsume(E, Edge),
@@ -712,21 +725,190 @@ process_edge_edge_subsumption(Edge, [E | Es], Subbed, Unsubbed, Temp_s, Temp_u):
      (append([E, Es], Temp_u, Unsubbed),
       append([Edge], Temp_s, Subbed)
      )
-    ).
+    ),
+    !.
 
 merge_edge_with_all_edges(Edge, Other_edges, Return):-
-    % process Edge
     get_all_intersections(Edge, Other_edges, All_intscts, []),
-    intersection_all_points(All_intscts, All_intsct_pts, []),
+    intersection_all_edges(All_intscts, All_intsct_edgs, []),
+    list_delete(Other_edges, All_intsct_edgs, Un_intsct_edges),
+    append([Edge], Other_edges, All_edges),
+    readjust_intersected_edges(All_intscts, All_edges, Adjd_edges, []),
+    append(Adjd_edges, Un_intsct_edges, Adjusted_edges),
+    readjust_new_edge(Edge, Adjusted_edges, New_edge, New_IE, Old_IE),
+    list_delete(Adjusted_edges, Old_IE, Adjusted_edges_1),
+    append(Adjusted_edges_1, New_IE, Adjusted_edges_2),
+    append([New_edge], Adjusted_edges_2, Return).
+
+% TODO::
+readjust_new_edge(Edge, Intersected_edges, New_edge, New_IE, Old_IE):-
+    get_all_intersections(Edge, Intersected_edges, All_intscts, []),
+    readjust_new_edge_intsct(Edge, All_intscts, New_edge, Old_IE, New_IE, [], [], []), 
+    !.
+
+readjust_new_edge_intsct(_, [], New_edge_r, Old_IE, New_IE, New_edge_r, Old_IE, New_IE).
+readjust_new_edge_intsct(Edge, [I | Intscts], New_edge_r, Old_IE, New_IE, Temp_edge, Temp_old_ie, Temp_new_ie):-
+    Edge = [P1, P2],
+    I = [IE_, IPs],
+    IPs = [IP | _],
+    IE_ = [PE1, PE2],
+    ((point_near(PE1, IP), IE = [IP, PE2], !);
+     (point_near(PE2, IP), IE = [PE1, IP], !)), % descretization brings noise
+%    ((IE = [PE, IP], !); (IE = [IP, PE], !)),
+    seg_length([P1, IP], L1),
+    seg_length([P2, IP], L2),
+%    seg_length([PE, IP], LE),
+    % cut P2 or PE ?
+    (L1 > L2 ->
+	 % no edge between [P2, PE], just remove P2
+	 (not(edge_line_seg_proportion(P2, PE)) ->
+	      (New_edge = [P1, IP],
+	       New_ie = IE
+	      );
+	  % there is an edge, compare it with IE
+	  (avg_grad_val_seg([P2, PE], V2E),
+	   avg_grad_val_seg([P2, IP], V2I),
+	   avg_grad_val_seg([IP, PE], VIE),
+	   % if [P2, PE] is better than IE, replace it
+	   ((V2E + V2I)/2 > VIE -> 
+		(New_edge = [P1, P2],
+		 New_ie = [PE, P2]
+		);
+	    (New_edge = [P1, IP],
+	     New_ie = IE
+	    )
+	   )
+	  )
+	 );
+     true
+    ),
+    (L1 < L2 ->
+	 % no edge between [P2, PE], just remove P2
+	 (not(edge_line_seg_proportion(P1, PE)) ->
+	      (New_edge = [P2, IP],
+	       New_ie = IE
+	      );
+	  % there is an edge, compare it with IE
+	  (avg_grad_val_seg([P1, PE], V1E),
+	   avg_grad_val_seg([P1, IP], V1I),
+	   avg_grad_val_seg([IP, PE], VIE),
+	   % if [P2, PE] is better than IE, replace it
+	   ((V1E + V1I)/2 > VIE -> 
+		(New_edge = [P2, P1],
+		 New_ie = [PE, P1]
+		);
+	    (New_edge = [P2, IP],
+	     New_ie = IE
+	    )
+	   )
+	  )
+	 );
+     true
+    ),
+    (L1 == L2 ->
+	 (avg_grad_val_seg([P1, IP], V1I),
+	  avg_grad_val_seg([P2, IP], V2I),
+	  (V1I >= V2I -> 
+	       % no edge between [P2, PE], just remove P2
+	       (not(edge_line_seg_proportion(P2, PE)) ->
+		    (New_edge = [P1, IP],
+		     New_ie = IE
+		    );
+		% there is an edge, compare it with IE
+		(avg_grad_val_seg([P2, PE], V2E),
+		 avg_grad_val_seg([P2, IP], V2I),
+		 avg_grad_val_seg([IP, PE], VIE),
+		 % if [P2, PE] is better than IE, replace it
+		 ((V2E + V2I)/2 > VIE -> 
+		      (New_edge = [P1, P2],
+		       New_ie = [PE, P2]
+		      );
+		  (New_edge = [P1, IP],
+		   New_ie = IE
+		  )
+		 )
+		)
+	       );
+	   (not(edge_line_seg_proportion(P1, PE)) ->
+		(New_edge = [P2, IP],
+		 New_ie = IE
+		);
+	    % there is an edge, compare it with IE
+	    (avg_grad_val_seg([P1, PE], V1E),
+	     avg_grad_val_seg([P1, IP], V1I),
+	     avg_grad_val_seg([IP, PE], VIE),
+	     % if [P2, PE] is better than IE, replace it
+	     ((V1E + V1I)/2 > VIE -> 
+		  (New_edge = [P2, P1],
+		   New_ie = [PE, P1]
+		  );
+	      (New_edge = [P2, IP],
+	       New_ie = IE
+	      )
+	     )
+	    )
+	   )
+	  )
+	 );
+     true
+    ),
+    !,
+    intersection_line_seg(New_edge, Temp_edge, Temp_edge_1),
+    append(Temp_old_ie, [IE], Temp_old_ie_1),
+    append(Temp_new_ie, [New_ie], Temp_new_ie_1),
+    readjust_new_edge_intsct(Edge, Intscts, New_edge_r, Old_IE, New_IE, Temp_edge_1, Temp_old_ie_1, Temp_new_ie_1).
+
+intersection_line_seg(E, [], E).
+intersection_line_seg(E, E, E).
+intersection_line_seg([X, Y], [Y, X], [X, Y]).
+intersection_line_seg(E1, E2, Return):-
+    get_left_right_most_points_in_list(E1, L1, R1),
+    get_left_right_most_points_in_list(E2, L2, R2),
+    L1 = [XL1, YL1],
+    L2 = [XL2, YL2],
+    R1 = [XR1, YR1],
+    R2 = [XR2, YR2],
+    ((XL1 =< XL2, XR1 > XR2, Return = [L2, R2], !);
+     (XL1 < XL2, XR1 >= XR2, Return = [L2, R2], !);
+     (XL1 =< XL2, XR1 < XR2, Return = [L2, R1], !);
+     (XL1 < XL2, XR1 =< XR2, Return = [L2, R1], !);
+     (XL1 >= XL2, XR1 < XR2, Return = [L1, R1], !);
+     (XL1 > XL2, XR1 =< XR2, Return = [L1, R1], !);
+     (XL1 >= XL2, XR1 > XR2, Return = [L1, R2], !);
+     (XL1 > XL2, XR1 >= XR2, Return = [L1, R2], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 =< YL2, YR1 > YR2, Return = [L2, R2], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 < YL2, YR1 >= YR2, Return = [L2, R2], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 =< YL2, YR1 < YR2, Return = [L2, R1], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 < YL2, YR1 =< YR2, Return = [L2, R1], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 >= YL2, YR1 < YR2, Return = [L1, R1], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 > YL2, YR1 =< YR2, Return = [L1, R1], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 >= YL2, YR1 > YR2, Return = [L1, R2], !);
+     (XL1 == XL2, XR1 == XR2, 
+      YL1 > YL2, YR1 >= YR2, Return = [L1, R2], !)
+    ).
+
+readjust_intersected_edges([], _, E, E).
+readjust_intersected_edges([I | Intscts], All_edges, Return, Temp):-
+    I = [E, Points],
+    delete(All_edges, E, Other_edges),
+    get_all_intersections(E, Other_edges, All_intscts, []),
+    intersection_all_points(All_intscts, All_intsct_pts_, []),
+    list_to_set(All_intsct_pts_, All_intsct_pts),
     length(All_intsct_pts, L_int_pts),
-    % if only one intersected point, we should decide which node to be removed
+    % if only one intersected point
     (L_int_pts == 1 ->
 	 (All_intsct_pts = [IP | _],
-	  All_intscts = [[IE | _] | _],
-	  Edge = [P1, P2],
+	  E = [P1, P2],
 	  % if the intersected point (IP) is an end of Edge, no change
-	  (member(IP, Edge) ->
-	       (Return = [Edge, IE]);
+	  (member(IP, E) ->
+	       append([E], Temp, Temp_1);
 	   (seg_length([P1, IP], L1),
 	    seg_length([P2, IP], L2),
 	    % if lengths have large difference
@@ -742,72 +924,18 @@ merge_edge_with_all_edges(Edge, Other_edges, Return):-
 		 );
 	     true
 	    ),
-	    delete(Other_edges, IE, Rest_edges),
-	    length(Rest_edges, L_r),
-	    % IE is the only edge in this component
-	    (L_r == 0 ->
-		 (IE = [PE1, PE2],
-		  seg_length([PE1, IP], LE1),
-		  seg_length([PE2, IP], LE2),
-		  % if lengths have large difference
-		  (LE1 > LE2 -> New_ie = [PE1, IP]; true),
-		  (LE1 < LE2 -> New_ie = [IP, PE2]; true),
-		  (LE1 == LE2 ->
-		       (avg_grad_val_seg([PE1, IP], VE1),
-			avg_grad_val_seg([PE2, IP], VE2),
-			(VE1 >= VE2 ->
-			     New_ie = [PE1, IP];
-			 New_ie = [IP, PE2]
-			)
-		       );
-		   true
-		  ),
-		  Return = [New_edge, New_ie]
-		 );
-	     % there are other edges
-	     (edges_ends(Rest_edges, Rest_vertices),
-	      IE = [PE1, PE2],
-	      (member(PE1, Rest_vertices) ->
-		   New_ie = [PE1, IP];
-	       (member(PE2, Rest_vertices) ->
-		    New_ie = [PE2, IP];
-		(avg_grad_val_seg([PE1, IP], VE1),
-		 avg_grad_val_seg([PE2, IP], VE2),
-		 (VE1 > VE2 ->
-		      New_ie = [PE1, IP];
-		  New_ie = [IP, PE2]
-		 )
-		)
-	       )
-	      ),
-	      append([New_edge, New_ie], Rest_edges, Return)
-	     )
-	    )
+	    append([New_edge], Temp, Temp_1)
 	   )
 	  )
 	 );
-     % if more than 1 intersected points, just remove left and right most ends
-     (get_left_right_most_points_in_list(All_intsct_pts, Left, Right),
-      New_edge = [Left, Right],
-      append([New_edge], Other_edges, Temp_edges_1),
-      % process the edges that intersected with Edge
-      readjust_intersected_edges(All_intscts, Temp_edges_1, Adjd_edges, []),
-      intersection_all_edges(All_intscts, All_intsct_edgs, []),
-      list_delete(Temp_edges_1, All_intsct_edgs, Temp_edges_2),
-      append(Temp_edges_2, Adjd_edges, Return)
+     % if more than one intersected point
+     (intersection_all_points(All_intscts, All_intsct_pts, []),
+      append(Points, All_intsct_pts, All_intsct_pts_1),
+      get_left_right_most_points_in_list(All_intsct_pts_1, L, R),
+      New_edge = [L, R],
+      append(Temp, [New_edge], Temp_1)
      )
-    ).
-
-readjust_intersected_edges([], _, Return, Return).
-readjust_intersected_edges([I | Intscts], All_edges, Return, Temp):-
-    I = [E, Points],
-    delete(All_edges, E, Other_edges),
-    get_all_intersections(E, Other_edges, All_intscts, []),
-    intersection_all_points(All_intscts, All_intsct_pts, []),
-    append(Points, All_intsct_pts, All_intsct_pts_1),
-    get_left_right_most_points_in_list(All_intsct_pts_1, L, R),
-    New_edge = [L, R],
-    append(Temp, [New_edge], Temp_1),
+    ),
     readjust_intersected_edges(Intscts, All_edges, Return, Temp_1).
 
 merge_all_edges([], _, Return, Return).
@@ -823,7 +951,8 @@ merge_all_edges([Edge | Edges], All_edges, Return, Temp):-
     merge_all_edges(Edges, All_edges_2, Return, Temp_1).
     
 % obtain all intersected points in [[E1, P1], [E2, P2], ...]
-intersection_all_points([], Return, Return).
+intersection_all_points([], Return, Temp):-
+    list_to_set(Temp, Return), !.
 intersection_all_points([EP | EPs], Return, Temp):-
     EP = [_, Points],
     append(Temp, Points, Temp_1),
@@ -915,18 +1044,6 @@ connect_ends(Edge_list, New_edges):-
     examine_new_edges(Combs, Edge_list, New_edges, []).
 
 % build a connection list of all edges
-intersected_or_near(E1, E2):-
-    (intersected_seg(E1, E2), !);
-    ((E1 = [P1, P2],
-      E2 = [P3, P4],
-      ((point_near(P1, P3), edge_line_seg_proportion(P1, P3));
-       (point_near(P1, P4), edge_line_seg_proportion(P1, P4));
-       (point_near(P2, P3), edge_line_seg_proportion(P2, P3));
-       (point_near(P2, P4), edge_line_seg_proportion(P2, P4))
-      )
-     ), !
-    ).
-
 find_all_intersected_or_near_edges(Edge, Idx_list, Edge_list, Return, Temp):-
     Edge_list == [] ->
 	Return = Temp;

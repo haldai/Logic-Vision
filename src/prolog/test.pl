@@ -40,7 +40,7 @@ halt_prog:-
 test_go:-
     display_refresh,
     sample_conjecture_edges_1(300, 200, E),
-    display_line_list(E, g),
+    display_polygon_list(E, g),
     print_list(E).
 %    build_connected_components(E, P),
 %    display_refresh,

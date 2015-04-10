@@ -182,17 +182,12 @@ connected(_, Y1, _, Y2):-
     !.
 
 connected(P1, P2):-
-    (
-	P1 = [];
-	P2 = []
-    ) 
-    ->
+    (P1 = []; P2 = []) ->
 	true;
-    (
-	P1 = [X1, Y1 | _],
-	P2 = [X2, Y2 | _],
-	!,
-	connected(X1, Y1, X2, Y2)
+    (P1 = [X1, Y1 | _],
+     P2 = [X2, Y2 | _],
+     !,
+     connected(X1, Y1, X2, Y2)
     ).
 
 connected(P1, P2):-
@@ -452,6 +447,19 @@ combination(N, List, Combs):-
 	    (member(Comb_idx, Comb_idx_list),
 	     get_elements(Comb_idx, List, Comb_element)),
 	    Combs).
+
+% checks whether line seg E1 and E2 intersected or near
+intersected_or_near(E1, E2):-
+    (intersected_seg(E1, E2), !);
+    ((E1 = [P1, P2],
+      E2 = [P3, P4],
+      ((point_near(P1, P3));%, edge_line_seg_proportion(P1, P3));
+       (point_near(P1, P4));%, edge_line_seg_proportion(P1, P4));
+       (point_near(P2, P3));%, edge_line_seg_proportion(P2, P3));
+       (point_near(P2, P4))%, edge_line_seg_proportion(P2, P4))
+      )
+     ), !
+    ).
 
 % get end points of all edges in a list
 edges_ends(Edges, Ends, Temp):-
