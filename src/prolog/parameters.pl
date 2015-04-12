@@ -1,5 +1,5 @@
 % thresholds for edge_point gradient
-edge_point_thresh(3).
+edge_point_thresh(4.5).
 % thresholds for same_line parameters difference
 same_line_para_thresh(0.01).
 % threshold for "3 points on same line"

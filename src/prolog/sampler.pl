@@ -16,8 +16,7 @@ sample_line(A, B, C, Point_list):-
 		   Yn >= 0
 		  ),
 		  Point_list
-		 ),
-	  !
+		 )
 	 );
      (Hn is H - 1,
       findall([Xn, Yn],
@@ -27,8 +26,7 @@ sample_line(A, B, C, Point_list):-
 	       Xn >= 0
 	      ),
 	      Point_list
-	     ),
-      !
+	     )
      )
     ),
     !.
@@ -48,8 +46,7 @@ sample_line(A, B, C, Point_list):-
 		   Xn >= 0
 		  ),
 		  Point_list
-		 ),
-	  !
+		 )
 	 );
      (Wn is W - 1,
       findall([Xn, Yn],
@@ -59,8 +56,7 @@ sample_line(A, B, C, Point_list):-
 	       Yn >= 0
 	      ),
 	      Point_list
-	     ),
-      !
+	     )
      )
     ),
     !.
@@ -81,7 +77,7 @@ sample_line_seg_x(A, B, C, Point_list, X_1, X_2):-
     !,
     (X_1 =< X_2 ->
 	 (X1 = X_1, X2 = X_2);
-     (X1 = X_2, X2 = X1)
+     (X1 = X_2, X2 = X_1)
     ),
     point_on_line(0, Y, A, B, C),
     img_size(W, H),
@@ -95,8 +91,7 @@ sample_line_seg_x(A, B, C, Point_list, X_1, X_2):-
 		   Yn >= 0
 		  ),
 		  Point_list
-		 ),
-	  !
+		 )
 	 );
      (Hn is H - 1,
       findall([Xn, Yn],
@@ -106,8 +101,7 @@ sample_line_seg_x(A, B, C, Point_list, X_1, X_2):-
 	       Xn >= X1
 	      ),
 	      Point_list
-	     ),
-      !
+	     )
      )
     ).
 
@@ -135,8 +129,7 @@ sample_line_seg_y(A, B, C, Point_list, Y_1, Y_2):-
 		   Yn >= Y1
 		  ),
 		  Point_list
-		 ),
-	  !
+		 )
 	 );
      (findall([Xn, Yn],
 	      (between(Y1, Y2, Yn),
@@ -145,8 +138,7 @@ sample_line_seg_y(A, B, C, Point_list, Y_1, Y_2):-
 	       Xn >= 0
 	      ),
 	      Point_list
-	     ),
-      !
+	     )
      )
     ).
 

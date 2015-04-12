@@ -259,6 +259,24 @@ intersected_seg(S1, S2, Points):-
 	);
     Points = [].
 
+intersected_seg_ex(S1, S2, Points):-
+    line_parameters(S1, A1, B1, C1),
+    line_parameters(S2, A2, B2, C2),
+    D is A1*B2 - A2*B1,
+    (D == 0 ->
+	 (sample_line_seg(S1, PL1),
+	  sample_line_seg(S2, PL2),
+	  findall(P, (member(P, PL1), member(P, PL2)), Points)
+	 );
+     (Dx is -(C1*B2 - C2*B1),
+      Dy is (C1*A2 - C2*A1),
+      X is truncate(Dx/D + 0.5),
+      Y is truncate(Dy/D + 0.5),
+      Points = [[X, Y]]
+     )
+    ), !.
+
+
 % intersected points of line L1 and L2
 intersected_lines(L1, L2, Points):-
     L1 = [A1, B1, C1],
@@ -455,12 +473,12 @@ intersected_or_near(E1, E2):-
     % intersected point near one of the ends
     (E1 = [P1, P2],
      E2 = [P3, P4],
-     intersected_seg(E1, E2, Points),
+     intersected_seg_ex(E1, E2, Points),
      middle_element(Points, IP),
-     ((point_near_ex(P1, IP));%, edge_line_seg_proportion(P1, P3));
-      (point_near_ex(P2, IP));%, edge_line_seg_proportion(P1, P4));
-      (point_near_ex(P3, IP));%, edge_line_seg_proportion(P2, P3));
-      (point_near_ex(P4, IP))%, edge_line_seg_proportion(P2, P4)))
+     (((point_near_ex(P1, IP));%, edge_line_seg_proportion(P1, P3));
+      (point_near_ex(P2, IP))),%, edge_line_seg_proportion(P1, P4));
+      ((point_near_ex(P3, IP));%, edge_line_seg_proportion(P2, P3));
+      (point_near_ex(P4, IP)))%, edge_line_seg_proportion(P2, P4)))
      ),
      !
     ).

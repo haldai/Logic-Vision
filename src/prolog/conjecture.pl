@@ -72,12 +72,34 @@ extend_edge_line_seg_right(X1, Y1, X2, Y2, Right, Right_end):-
      )
     ).
 
+% shrink an edge such that each of its end is a local optima
+shrink_edge_point_list([P | Ps], Return, Max):-
+    P = [X, Y],
+    edge_point(X, Y, V, _),
+    (V >= Max ->
+	 (shrink_edge_point_list(Ps, Return, V), !);
+     (Return = P, !)
+    ).
+
+shrink_edge(Edge, Return):-
+    Edge = [L, R],
+    sample_line_seg(Edge, Ps),
+    reverse(Ps, [], Rev_Ps),
+    shrink_edge_point_list(Ps, L1, 0),
+    shrink_edge_point_list(Rev_Ps, R1, 0),
+    sample_line_seg([L, L1], P1),
+    middle_element(P1, Left),
+    sample_line_seg([R, R1], P2),
+    middle_element(P2, Right),
+    Return = [Left, Right].
+
 % extend a short edge segment to long edge
 extend_edge_line_seg(X1, Y1, X2, Y2, Left, Right, Edge):-
     reverse(Left, [], Rev_left),
     extend_edge_line_seg_left(X1, Y1, X2, Y2, Rev_left, Left_end),
     extend_edge_line_seg_right(X1, Y1, X2, Y2, Right, Right_end),
-    Edge = [Left_end, Right_end].
+    Edge_ = [Left_end, Right_end],
+    shrink_edge(Edge_, Edge).
 
 % build_edge(org_x1, org_y1, org_x2, org_y2, [[start_x, start_y], [end_x, end_y]])
 build_edge(X1, Y1, X2, Y2, Edge):-
@@ -492,15 +514,15 @@ sample_edges_components(_, [], Conn_comp_list, Conn_comp_list, _, _).
 sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
     write("turn "),
     writeln(N),
-    writeln("====Points===="),
-    print_list(Point_list),
-    writeln("====Combs===="),
-    print_list(Ongoing_combs),
-    writeln("====Comps===="),
-    print_list(Temp_comp_list),
-    writeln("====Sampled lines===="),
-    print_list(Sampled_lines),
-    writeln("========"),
+%    writeln("====Points===="),
+%    print_list(Point_list),
+%    writeln("====Combs===="),
+%    print_list(Ongoing_combs),
+%    writeln("====Comps===="),
+%    print_list(Temp_comp_list),
+%    writeln("====Sampled lines===="),
+%    print_list(Sampled_lines),
+%    writeln("========"),
 %    get_char(_),
     N2 is N + 1,
     sample_edge_limit(T),
@@ -535,10 +557,10 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
 	      edges_ends(Temp_edges_new, All_ends_new),
 	      list_delete(All_ends_old, All_ends_new, Removed_ends),
 	      list_delete(Point_list, Removed_ends, Point_list_1),
+	      display_point_list(Comb, b),
 	      display_point_list(Point_list, r),
 	      % find all single connected vertices of each Comp
 	      % & make new combinations
-	      display_point_list(Comb, b),
 	      make_new_combs(New_edge, Temp_comp_list_1, Temp_comp_list, Point_list_1, Other_combs, Sampled_lines_1, New_point_list, New_ongoing_combs), % TODO::
 	      display_point_list(New_point_list, b),
 
@@ -620,7 +642,7 @@ make_new_combs(Edge, Comp_list, Comp_list_old, PL_old, Combs_old, Sampled_lines,
     gen_combs(PL_end_new, PL_free_remains, Sampled_lines, Comb_e_f_AR, []),
 %    append(Comb_e_e_AR, Comb_e_e_AA, Combs_1),
     append(Comb_e_e_AR, Comb_e_f_AR, Combs_2),
-    append(Combs_old, Combs_2, Combs_new_),
+    append(Combs_2, Combs_old, Combs_new_),
     % remove old combinations
     remove_points_combs(Combs_new_, PL_removed, Combs_new),
     !.
@@ -832,7 +854,7 @@ merge_edge_with_all_edges(Edge, Other_edges, Return):-
 
 % TODO::
 readjust_new_edge(Edge, Intersected_edges, New_edge, New_IE, Old_IE):-
-    get_all_intersections_ex(Edge, Intersected_edges, All_intscts, []),
+    get_all_intersections(Edge, Intersected_edges, All_intscts, []),
     readjust_new_edge_intsct(Edge, All_intscts, New_edge, Old_IE, New_IE, [], [], []), 
     !.
 
