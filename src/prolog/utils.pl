@@ -457,21 +457,23 @@ intersected_or_near(E1, E2):-
      E2 = [P3, P4],
      intersected_seg(E1, E2, Points),
      middle_element(Points, IP),
-     ((point_near(P1, IP));%, edge_line_seg_proportion(P1, P3));
-      (point_near(P2, IP));%, edge_line_seg_proportion(P1, P4));
-      (point_near(P3, IP));%, edge_line_seg_proportion(P2, P3));
-      (point_near(P4, IP))%, edge_line_seg_proportion(P2, P4)))
-     )
-    );
-    ((E1 = [P1, P2],
-      E2 = [P3, P4],
-      ((point_near(P1, P3));%, edge_line_seg_proportion(P1, P3));
-       (point_near(P1, P4));%, edge_line_seg_proportion(P1, P4));
-       (point_near(P2, P3));%, edge_line_seg_proportion(P2, P3));
-       (point_near(P2, P4))%, edge_line_seg_proportion(P2, P4))
-      )
-     ), !
+     ((point_near_ex(P1, IP));%, edge_line_seg_proportion(P1, P3));
+      (point_near_ex(P2, IP));%, edge_line_seg_proportion(P1, P4));
+      (point_near_ex(P3, IP));%, edge_line_seg_proportion(P2, P3));
+      (point_near_ex(P4, IP))%, edge_line_seg_proportion(P2, P4)))
+     ),
+     !
     ).
+%    ((E1 = [P1, P2],
+%      E2 = [P3, P4],
+%      ((point_near_ex(P1, P3));%, edge_line_seg_proportion(P1, P3));
+%       (point_near_ex(P1, P4));%, edge_line_seg_proportion(P1, P4));
+%       (point_near_ex(P2, P3));%, edge_line_seg_proportion(P2, P3));
+%       (point_near_ex(P2, P4))%, edge_line_seg_proportion(P2, P4))
+%      ),
+%      !
+%     )
+%    ).
 
 % get end points of all edges in a list
 edges_ends(Edges, Ends, Temp):-
@@ -518,6 +520,12 @@ point_near(P1, P2):-
     point_near_thresh(T),
     D/Dia =< T.
 
+point_near_ex(P1, P2):-
+    distance(P1, P2, D),
+    image_diagonal(Dia),
+    edge_near_thresh(T),
+    D/Dia =< T.
+
 % combo distance limit
 in_combo_dist(P1, P2):-
     distance(P1, P2, D),
@@ -525,16 +533,20 @@ in_combo_dist(P1, P2):-
     combo_dist_thresh(T),
     D/Dia =< T.
 
-in_combo_dist(P1, P2, T):-
+in_combo_dist(P1, P2, Tmax, Tmin):-
     distance(P1, P2, D),
     image_diagonal(Dia),
-    D/Dia =< T.
+    D/Dia =< Tmax,
+    D/Dia >= Tmin.
 
 
 % same line segment
 same_seg([], []).
 same_seg([P1, P2], [P1, P2]).
-same_seg([P1, P2], [P2, P1]).
+same_seg([P2, P1], [P1, P2]).
+same_seg([P1, P2], [P3, P4]):-
+    (connected(P1, P3), connected(P2, P4), !);
+    (connected(P1, P4), connected(P2, P3), !).
 
 % same line segment set
 same_seg_set([], []).
@@ -661,9 +673,10 @@ lin_reg(Xs, Ys, A, B, C):-
     Xs = [X_ | _],
     length(S, L),
     L == 1,
-    A = 1,
-    B = 0,
-    C = -X_.
+    !,
+    A is 1,
+    B is 0,
+    C is -X_.
 
 lin_reg(Xs, Ys, A, B, C):-
     length(Xs, Lx),
@@ -674,19 +687,21 @@ lin_reg(Xs, Ys, A, B, C):-
     length(S, L),
     L == 1,
     Ys = [Y_ | _],
-    A = 0,
-    B = 1,
-    C = -Y_.
+    !,
+    A is 0,
+    B is 1,
+    C is -Y_.
 
 lin_reg(Xs, Ys, A, B, C):-
     length(Xs, Lx),
     length(Ys, Ly),
     Lx == Ly,
     Lx > 1,
+    !,
     lin_reg(Xs, Ys, M, C_),
-    A = M,
-    B = -1,
-    C = C_.
+    A is M,
+    B is -1,
+    C is C_.
     
 lin_reg(Xs, Ys, M, C):-
   sums(Xs, Ys, 0, N, 0, S_X, 0, S_Y, 0, S_XY, 0, S_XX),

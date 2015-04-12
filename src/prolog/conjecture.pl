@@ -52,6 +52,8 @@ extend_edge_line_seg_left(X1, Y1, X2, Y2, Left, Left_end):-
 	Left_end = [X1, Y1];
     (Left = [First_point | Tail],
      First_point = [X, Y],
+%     edge_points_proportion_threshold(T),
+%     T1 is T + 1,
      edge_line_seg_proportion(X, Y, X2, Y2) ->
 	 extend_edge_line_seg_left(X, Y, X2, Y2, Tail, Left_end);
      Left_end = [X1, Y1]
@@ -62,6 +64,8 @@ extend_edge_line_seg_right(X1, Y1, X2, Y2, Right, Right_end):-
 	Right_end = [X2, Y2];
     (Right = [First_point | Tail],
      First_point = [X, Y],
+%     edge_points_proportion_threshold(T),
+%     T1 is T + 1,
      (edge_line_seg_proportion(X1, Y1, X, Y) ->
 	  extend_edge_line_seg_right(X1, Y1, X, Y, Tail, Right_end);
       Right_end = [X2, Y2]
@@ -137,50 +141,51 @@ line_existed(Line, Line_list):-
     ).
 
 % generate combination from existed edge points and a new point
-gen_combs_point(Point, Point_list, Sampled_lines, T, Comb_list, Temp_list):-
+gen_combs_point(Point, Point_list, Sampled_lines, Tmax, Tmin, Comb_list, Temp_list):-
     member(Point, Point_list) ->
 	Comb_list = [];
     (Point_list == [] ->
 	 Comb_list = Temp_list;
      (Point_list = [Head | Tail],
-      ((in_combo_dist(Point, Head, T), not(Point == Head)) ->
+      ((in_combo_dist(Point, Head, Tmax, Tmin), not(Point == Head)) ->
 	   (New_comb = [Point, Head],
 	    line_parameters(New_comb, A, B, C),
 	    (line_existed([A, B, C], Sampled_lines) ->
-		 gen_combs_point(Point, Tail, Sampled_lines, T, Comb_list, Temp_list);
+		 gen_combs_point(Point, Tail, Sampled_lines, Tmax, Tmin, Comb_list, Temp_list);
 	     (append(Temp_list, [New_comb], Temp_list_1),
-	      gen_combs_point(Point, Tail, Sampled_lines, T, Comb_list, Temp_list_1)
+	      gen_combs_point(Point, Tail, Sampled_lines, Tmax, Tmin, Comb_list, Temp_list_1)
 	     )
 	    )
 	   );
-       gen_combs_point(Point, Tail, Sampled_lines, T, Comb_list, Temp_list)
+       gen_combs_point(Point, Tail, Sampled_lines, Tmax, Tmin, Comb_list, Temp_list)
       )
      )
     ).
 
-gen_combs_point(Point, Point_list, Sampled_lines, T, Comb_list):-
-    gen_combs_point(Point, Point_list, Sampled_lines, T, Comb_list, []).
+gen_combs_point(Point, Point_list, Sampled_lines, Tmax, Tmin, Comb_list):-
+    gen_combs_point(Point, Point_list, Sampled_lines, Tmax, Tmin, Comb_list, []).
 
 gen_combs(Point_list_1, Point_list_2, Sampled_lines, Comb_list, Temp_list):-
     Point_list_1 == [] ->
 	Comb_list = Temp_list;
     (Point_list_1 = [Head | Tail],
-     combo_dist_thresh(T),
-     gen_combs_point(Head, Point_list_2, Sampled_lines, T, Comb_list_1),
+     combo_max_dist_thresh(T_max),
+     combo_min_dist_thresh(T_min),
+     gen_combs_point(Head, Point_list_2, Sampled_lines, T_max, T_min, Comb_list_1),
      append(Temp_list, Comb_list_1, Temp_list_1),
-     gen_combs(Tail, Point_list_2, Sampled_lines, T, Comb_list, Temp_list_1)
+     gen_combs(Tail, Point_list_2, Sampled_lines, T_max, T_min, Comb_list, Temp_list_1)
     ).
 
 gen_combs(Point_list_1, Point_list_2, Sampled_lines, Comb_list):-
     gen_combs(Point_list_1, Point_list_2, Sampled_lines, Comb_list, []).
 
-gen_combs(Point_list_1, Point_list_2, Sampled_lines, T, Comb_list, Temp_list):-
+gen_combs(Point_list_1, Point_list_2, Sampled_lines, T_max, T_min, Comb_list, Temp_list):-
     Point_list_1 == [] ->
 	Comb_list = Temp_list;
     (Point_list_1 = [Head | Tail],
-     gen_combs_point(Head, Point_list_2, Sampled_lines, T, Comb_list_1),
+     gen_combs_point(Head, Point_list_2, Sampled_lines, T_max, T_min, Comb_list_1),
      append(Temp_list, Comb_list_1, Temp_list_1),
-     gen_combs(Tail, Point_list_2, Sampled_lines, T, Comb_list, Temp_list_1)
+     gen_combs(Tail, Point_list_2, Sampled_lines, T_max, T_min, Comb_list, Temp_list_1)
     ).
 
 % checks whether point is on existed edges
@@ -188,7 +193,8 @@ point_not_on_edges(_, []).
 point_not_on_edges(Point, Edge_list):-
     Point = [X, Y| _],
     Edge_list = [Head | Tail],
-    (point_on_line_seg([X, Y], Head) ->
+    edge_near_thresh(T),
+    (point_on_line_seg_thresh([X, Y], Head, T) ->
 	 fail;
      point_not_on_edges([X, Y], Tail)
     ).
@@ -242,8 +248,7 @@ sample_new_edge_points(X1, Y1, X2, Y2, Edge_list, Point_list, Points):-
     edge_points_in_point_list(Line_point_list, Edge_point_list),
     clearest_edge_points_mid(Edge_point_list, All_edge_points),
     points_not_near_points(All_edge_points, Point_list, Temp_points),
-    points_not_on_edges(Temp_points, Edge_list, Points).
-    
+    points_not_on_edges(Temp_points, Edge_list, Points).    
 
 % sample a new point from random line that crosses [X, Y], it should not appear on existed edges
 sample_new_edge_points_random(X, Y, Edge_list, Point_list, Points, N):-
@@ -261,9 +266,6 @@ sample_new_edge_points_random(X, Y, Edge_list, Point_list, Points, N):-
      )
     ).
 
-sample_new_edge_points_random(X, Y, Edge_list, Point):-
-    sample_new_edge_points_random(X, Y, Edge_list, Point, 0).
-    
 % check if point is an end of any edge
 point_is_end_of_edges(Point, Edge_list):-
     Edge_list = [Head | Tail],
@@ -273,29 +275,20 @@ point_is_end_of_edges(Point, Edge_list):-
     ).
 
 % remove all points on edge and return the rest points
-get_points_on_edge(Point_list, Exist_edge_list, Edge, On_edge, Rest, Temp_on_edge, Temp_rest):-
-    Point_list == [] ->
-	(Rest = Temp_rest,
-	 On_edge = Temp_on_edge
+get_points_on_edge([], _, On_edge, Rest, On_edge, Rest).
+get_points_on_edge([Head | Tail], Edge, On_edge, Rest, Temp_on_edge, Temp_rest):-
+    point_on_line_seg(Head, Edge) ->
+	(append(Temp_on_edge, [Head], Temp_on_edge_1),
+	 get_points_on_edge(Tail, Edge, On_edge, Rest, Temp_on_edge_1, Temp_rest)
 	);
-    (Point_list = [Head | Tail],
-     (((member(Head, Edge); point_is_end_of_edges(Head, Exist_edge_list)) ->
-	   (append(Temp_rest, [Head], Temp_rest_1),
-	    get_points_on_edge(Tail, Exist_edge_list, Edge, On_edge, Rest, Temp_on_edge, Temp_rest_1)
-	   );
-       (point_on_line_seg(Head, Edge) ->
-	    (append(Temp_on_edge, [Head], Temp_on_edge_1),
-	     get_points_on_edge(Tail, Exist_edge_list, Edge, On_edge, Rest, Temp_on_edge_1, Temp_rest)
-	    );
-	(append(Temp_rest, [Head], Temp_rest_1),
-	 get_points_on_edge(Tail, Exist_edge_list, Edge, On_edge, Rest, Temp_on_edge, Temp_rest_1))
-       )
-      )
-     )
-    ).
+    (append(Temp_rest, [Head], Temp_rest_1),
+     get_points_on_edge(Tail, Edge, On_edge, Rest, Temp_on_edge, Temp_rest_1)
+    ),
+    !.
 
-get_points_on_edge(Point_list, Exist_edge_list, Edge, On_edge, Rest):-
-    get_points_on_edge(Point_list, Exist_edge_list, Edge, On_edge, Rest, [], []).
+
+get_points_on_edge(Point_list, Edge, On_edge, Rest):-
+    get_points_on_edge(Point_list, Edge, On_edge, Rest, [], []).
 
 % add new edge ends to point list
 add_edge_ends_to_point_list(Edge, Point_list, Return):-
@@ -449,7 +442,7 @@ sample_edges(Point_list, Ongoing_combs, Edge_list, Temp_list, Sampled_lines, N):
 	       )
 	      )
 	     );
-	 (sample_new_edge_points(X1, Y1, X2, Y2, Temp_list, Point_list, New_points_),
+	 (sample_new_edge_points_random([[X1, Y1], [X2, Y2]], Temp_list, Point_list, New_points_),
 	  get_coordinates(New_points_, New_points),
 	  display_point_list(New_points, b),
 	  %      writeln("New points:"),
@@ -468,33 +461,34 @@ sample_edges(Point_list, Ongoing_combs, Edge_list, Temp_list, Sampled_lines, N):
     !.
 
 % TODO::sample edges and group them into different components
-sample_edges_components(Point_list, [], Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
-    write("turn "),
-    writeln(N),
-    writeln("====Points===="),
-    print_list(Point_list),
-    writeln("====Comps===="),
-    print_list(Temp_comp_list),
-    writeln("====Sampled lines===="),
-    print_list(Sampled_lines),
-    writeln("========"),
-%    get_char(_),
-    N2 is N + 1,
-    sample_edge_limit(T),
-    (N > T ->
-	 (Conn_comp_list = Temp_comp_list);
-     % get all free points
-     (comps_to_edges(Temp_comp_list, Temp_edges, []),
-      edges_ends(Temp_edges, All_ends),
-      list_delete(Point_list, All_ends, Free_points),
-      (Free_points == [] ->
-	   (Conn_comp_list = Temp_comp_list);
-       (gen_combs(All_ends, Free_points, Sampled_lines, Comb_list),
-	sample_edges_components(All_ends, Comb_list, Conn_comp_list, Temp_comp_list, Sampled_lines, N2))
-      )
-     )
-    ), !.
-
+%sample_edges_components(Point_list, [], Conn_comp_list, Temp_comp_list, Sampled_lines, N, All_points):-
+%    write("turn "),
+%    writeln(N),
+%    writeln("====Points===="),
+%    print_list(Point_list),
+%    writeln("====Comps===="),
+%    print_list(Temp_comp_list),
+%    writeln("====Sampled lines===="),
+%    print_list(Sampled_lines),
+%    writeln("========"),
+%%    get_char(_),
+%    N2 is N + 1,
+%    sample_edge_limit(T),
+%    (N > T ->
+%	 (Conn_comp_list = Temp_comp_list);
+%     % get all free points
+%     (comps_to_edges(Temp_comp_list, Temp_edges, []),
+%      edges_ends(Temp_edges, All_ends),
+%      list_delete(Point_list, All_ends, Free_points),
+%      (Free_points == [] ->
+%	   (Conn_comp_list = Temp_comp_list);
+%       (gen_combs(All_ends, Free_points, Sampled_lines, Comb_list),
+%	gen_combs(All_ends, All_ends, [], Comb_list),
+%	sample_edges_components(All_ends, Comb_list, Conn_comp_list, Temp_comp_list, Sampled_lines, N2, All_points))
+%      )
+%     )
+%    ), !.
+sample_edges_components(_, [], Conn_comp_list, Conn_comp_list, _, _).
 sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
     write("turn "),
     writeln(N),
@@ -529,11 +523,12 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
 	      edges_ends(Temp_edges_old, All_ends_old),
 	      
 %	      reg_edge(Edge_, [P1, P2 | On_edge_point], Edge),
-	      reg_grow_edge(Edge_, Temp_edges_old, Point_list, Edge),
+	      reg_grow_edge(Edge_, Point_list, Edge),
 	      
 	      display_line(Edge, r),
 	      add_edge(Edge, Temp_comp_list, Temp_comp_list_1, New_edge, [], []),
 	      !,
+
 	      display_polygon_list(Temp_comp_list, g),
 	      display_polygon_list(Temp_comp_list_1, r),
 	      comps_to_edges(Temp_comp_list_1, Temp_edges_new, []),
@@ -543,25 +538,29 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
 	      display_point_list(Point_list, r),
 	      % find all single connected vertices of each Comp
 	      % & make new combinations
+	      display_point_list(Comb, b),
 	      make_new_combs(New_edge, Temp_comp_list_1, Temp_comp_list, Point_list_1, Other_combs, Sampled_lines_1, New_point_list, New_ongoing_combs), % TODO::
-	      display_point_list(Point_list_1, r),
-	      display_point_list(New_point_list, g),
-	      sample_edges_components(New_point_list, New_ongoing_combs, Conn_comp_list, Temp_comp_list_1, Sampled_lines_1, N2)
+	      display_point_list(New_point_list, b),
+
+	      sample_edges_components(New_point_list, New_ongoing_combs, Conn_comp_list, Temp_comp_list_1, Sampled_lines_1, N2),
+	      !
 	     );
 	 % sample new free points
 	 (comps_to_edges(Temp_comp_list, Temp_edges, []),
 	  edges_ends(Temp_edges, All_ends),
 	  list_delete(Point_list, All_ends, Free_points),
-	  sample_new_edge_points(X1, Y1, X2, Y2, Temp_edges, Free_points, New_points_),
+	  sample_new_edge_points(X1, Y1, X2, Y2, Temp_edges, Point_list, New_points_),
 	  get_coordinates(New_points_, New_points),
 	  display_point_list(New_points, b),
 	  %      writeln("New points:"),
 	  %      print_list_ln(New_points),
 	  gen_combs(New_points, Free_points, Sampled_lines, Comb_list),
 	  append(Other_combs, Comb_list, Comb_list_1),
-	  append(Point_list, New_points, Point_list_3),
-	  display_point_list(Point_list_3, b),
-	  sample_edges_components(Point_list_3, Comb_list_1, Conn_comp_list, Temp_comp_list, Sampled_lines_1, N2)
+	  append(Point_list, New_points, Point_list_1),
+	  display_point_list(Point_list_1, b),
+%	  display_point_list(Comb, b),
+	  sample_edges_components(Point_list_1, Comb_list_1, Conn_comp_list, Temp_comp_list, Sampled_lines_1, N2),
+	  !
 	 )
 	)
        )
@@ -570,8 +569,8 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
     ),
     !.
 
-reg_grow_edge(Edge, Edges_old, Point_list, New_edge):-
-    get_points_on_edge(Point_list, Edges_old, Edge, On_edge_point, _),
+reg_grow_edge(Edge, Point_list, New_edge):-
+    get_points_on_edge(Point_list, Edge, On_edge_point, _),
     append(Edge, On_edge_point, On_edge_point_1),
     reg_edge(Edge, On_edge_point_1, Reg_edge),
     Reg_edge = [[X1, Y1], [X2, Y2]],
@@ -579,10 +578,10 @@ reg_grow_edge(Edge, Edges_old, Point_list, New_edge):-
     get_left_right_most_points_in_list(Edge, L, R),
     get_left_right_most_points_in_list(Reg_edge_1, L1, R1),
     !,
-    ((L == L1, R == R1) ->
+    ((connected(L, L1), connected(R, R1)) ->
 	 (New_edge = Reg_edge_1, !);
      (append(Point_list, Reg_edge_1, Point_list_1),
-      reg_grow_edge(Reg_edge_1, Edges_old, Point_list_1, New_edge)
+      reg_grow_edge(Reg_edge_1, Point_list_1, New_edge)
      )
     ).
 
@@ -608,25 +607,28 @@ make_new_combs(Edge, Comp_list, Comp_list_old, PL_old, Combs_old, Sampled_lines,
     edges_ends(Edges_new, PL_end_new),
     edges_ends(Edges_old, PL_end_old),
     list_delete(PL_end_new, PL_end_old, PL_end_added), % added ends
-    list_delete(PL_old, PL_end_old, PL_free), % free points (not on edges)
+    list_delete(PL_old, PL_end_new, PL_free), % free points (not on edges)
     list_delete(PL_end_old, PL_end_new, PL_end_removed), % removed ends
     intersection(PL_end_old, PL_end_new, PL_end_remains), % remained ends
-    get_points_on_edge(PL_free, Edges_new, Edge, PL_free_removed, PL_free_remains), % remove free points
+    get_points_on_edge(PL_free, Edge, PL_free_removed, PL_free_remains), % remove free points
     append(PL_end_removed, PL_free_removed, PL_removed),
     append(PL_free_remains, PL_end_new, PL_new),
-    % remove old combinations
-    remove_points_combs(Combs_old, PL_removed, Comb_r_list),
     % generate new combinations
-    gen_combs(PL_end_added, PL_end_added, Sampled_lines, 0.5, Comb_e_e_AA, []),
-    gen_combs(PL_end_added, PL_end_remains, Sampled_lines, 0.5, Comb_e_e_AR, []), 
-    append(Comb_e_e_AR, Comb_e_e_AA, Combs_1),
-    append(Comb_r_list, Combs_1, Combs_new),
+%    combo_min_dist_thresh(T),
+%    gen_combs(PL_end_added, PL_end_added, Sampled_lines, Comb_e_e_AA, []),
+    gen_combs(PL_end_added, PL_end_remains, Sampled_lines, Comb_e_e_AR, []),
+    gen_combs(PL_end_new, PL_free_remains, Sampled_lines, Comb_e_f_AR, []),
+%    append(Comb_e_e_AR, Comb_e_e_AA, Combs_1),
+    append(Comb_e_e_AR, Comb_e_f_AR, Combs_2),
+    append(Combs_old, Combs_2, Combs_new_),
+    % remove old combinations
+    remove_points_combs(Combs_new_, PL_removed, Combs_new),
     !.
 
 %add_edge(Edge, [], Return, Temp, []):-
 %    append(Temp, [Edge], Return), !.
 add_edge(Edge, [], Return, New_edge, Temp, New_comps):-
-    merge_conn_comps(Edge, New_comps, New_edge, New_comp),
+    merge_conn_comps(Edge, New_comps, New_edge, New_comp, 0),
     append(Temp, [New_comp], Return), !.
 add_edge(Edge, [Comp | Comps], Return, New_edge, Temp, New_comps):-
     edge_connect_to_comp(Edge, Comp) ->
@@ -645,7 +647,7 @@ merge_conn_comps(Edge, Comps, New_edge, Return):-
     New_edge = Edge,
     !.
 merge_conn_comps([], _, [], _).
-merge_conn_comps(Edge, Comps, New_edge, Return):-
+merge_conn_comps(Edge, Comps, New_edge, Return, T):-
     comps_to_edges(Comps, All_edges, []),
     % Process edge-subsumed edges
     process_edge_edge_subsumption(Edge, All_edges, Subbed, Unsubbed, [], []),
@@ -659,11 +661,14 @@ merge_conn_comps(Edge, Comps, New_edge, Return):-
 
       % Process point-subsumed edges (point_on_line_seg(_,_,T>TT), Xy<T<Xy)
 %      process_point_edge_subsumption(New_edge, New_other_edges, New_other_edges_1),
-      (same_seg(New_edge_, Edge) ->
+      ((same_seg(New_edge_, Edge), T > 1) ->
 	   (Return = Merged_edges,
 	    New_edge = New_edge_,
 	    !);
-       merge_conn_comps(New_edge_, [New_other_edges], New_edge, Return)
+       (T_1 is T + 1,
+	merge_conn_comps(New_edge_, [New_other_edges], New_edge, Return, T_1),
+	!
+       )
       )
      )
     ),
@@ -837,8 +842,8 @@ readjust_new_edge_intsct(Edge, [I | Intscts], New_edge_r, Old_IE, New_IE, Temp_e
     IPs = [IP | _],
     IE_ = [PE1, PE2],
     % an 'unchanged' edge between two adjusted edges
-    not(point_near(PE1, IP)),
-    not(point_near(PE2, IP)),
+    not(point_near_ex(PE1, IP)),
+    not(point_near_ex(PE2, IP)),
     append(Temp_old_ie, [IE_], Temp_old_ie_1),
     readjust_new_edge_intsct(Edge, Intscts, New_edge_r, Old_IE, New_IE, Temp_edge, Temp_old_ie_1, Temp_new_ie).
     
@@ -847,8 +852,8 @@ readjust_new_edge_intsct(Edge, [I | Intscts], New_edge_r, Old_IE, New_IE, _, Tem
     I = [IE_, IPs],
     IPs = [IP | _],
     IE_ = [PE1, PE2],
-    ((point_near(PE1, IP), IE = [IP, PE2], !);
-     (point_near(PE2, IP), IE = [PE1, IP], !)), % descretization brings noise
+    ((point_near_ex(PE1, IP), IE = [IP, PE2], !);
+     (point_near_ex(PE2, IP), IE = [PE1, IP], !)), % descretization brings noise
     ((IE = [PE, IP], !); (IE = [IP, PE], !)),
     seg_length([P1, IP], L1),
     seg_length([P2, IP], L2),
