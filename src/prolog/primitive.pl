@@ -99,13 +99,19 @@ point_on_line_seg_thresh(Point, Seg, T):-
     distance(Point, P1, D1),
     distance(Point, P2, D2),
     distance(P1, P2, D3),
-    abs((D1 + D2 - D3)/D3) =< T.
+    Diff1 is abs((D1 + D2 - D3)/D3), % if P1-P and P2-P are short edges
+    Diff2 is abs((abs(D1 - D2) - D3)/D3), % if one of P1-P and P2-P is long edge
+    (((D1 >= D3; D2 >= D3), Diff2 =< T, 
+      (point_near(Point, P1);point_near(Point, P2))
+     );
+     ((D1 < D3, D2 < D3), Diff1 =< T)
+    ),
+    !.
 
 point_on_line_seg(Point, Seg):-
     on_seg_thresh(T),
     point_on_line_seg_thresh(Point, Seg, T).
 
-    
 % get line parameters from two points
 line_parameters(X1, Y1, X2, Y2, A, B, C):-
     integer(X1),
@@ -256,10 +262,11 @@ edge_points_proportion(Point_list, Proportion):-
 
 % use proportion of edge points to judge the existance of edge
 edge_line_seg_proportion(X1, Y1, X2, Y2, N, Thresh):-
-    edge_point(X1, Y1),
-    edge_point(X2, Y2),
+%    edge_point(X1, Y1),
+%    edge_point(X2, Y2),
     inside_points_rec(X1, Y1, X2, Y2, N, Inside_points),
-    edge_points_proportion(Inside_points, Proportion),
+    append(Inside_points, [[X1, Y1], [X2, Y2]], Inside_points_),
+    edge_points_proportion(Inside_points_, Proportion),
     Proportion >= Thresh.
 
 edge_line_seg_proportion(X1, Y1, X2, Y2, N):-

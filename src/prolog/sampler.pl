@@ -16,7 +16,8 @@ sample_line(A, B, C, Point_list):-
 		   Yn >= 0
 		  ),
 		  Point_list
-		 )
+		 ),
+	  !
 	 );
      (Hn is H - 1,
       findall([Xn, Yn],
@@ -26,7 +27,8 @@ sample_line(A, B, C, Point_list):-
 	       Xn >= 0
 	      ),
 	      Point_list
-	     )
+	     ),
+      !
      )
     ),
     !.
@@ -46,7 +48,8 @@ sample_line(A, B, C, Point_list):-
 		   Xn >= 0
 		  ),
 		  Point_list
-		 )
+		 ),
+	  !
 	 );
      (Wn is W - 1,
       findall([Xn, Yn],
@@ -56,7 +59,8 @@ sample_line(A, B, C, Point_list):-
 	       Yn >= 0
 	      ),
 	      Point_list
-	     )
+	     ),
+      !
      )
     ),
     !.
@@ -74,6 +78,7 @@ sample_line_seg_x(A, B, C, Point_list, X_1, X_2):-
     number(C),
     number(X_1),
     number(X_2),
+    !,
     (X_1 =< X_2 ->
 	 (X1 = X_1, X2 = X_2);
      (X1 = X_2, X2 = X1)
@@ -90,7 +95,8 @@ sample_line_seg_x(A, B, C, Point_list, X_1, X_2):-
 		   Yn >= 0
 		  ),
 		  Point_list
-		 )
+		 ),
+	  !
 	 );
      (Hn is H - 1,
       findall([Xn, Yn],
@@ -100,7 +106,8 @@ sample_line_seg_x(A, B, C, Point_list, X_1, X_2):-
 	       Xn >= X1
 	      ),
 	      Point_list
-	     )
+	     ),
+      !
      )
     ).
 
@@ -110,6 +117,7 @@ sample_line_seg_y(A, B, C, Point_list, Y_1, Y_2):-
     number(C),
     number(Y_1),
     number(Y_2),
+    !,
     (Y_1 =< Y_2 ->
 	 (Y1 = Y_1, Y2 = Y_2);
      (Y1 = Y_2, Y2 = Y_1)
@@ -127,7 +135,8 @@ sample_line_seg_y(A, B, C, Point_list, Y_1, Y_2):-
 		   Yn >= Y1
 		  ),
 		  Point_list
-		 )
+		 ),
+	  !
 	 );
      (findall([Xn, Yn],
 	      (between(Y1, Y2, Yn),
@@ -136,9 +145,22 @@ sample_line_seg_y(A, B, C, Point_list, Y_1, Y_2):-
 	       Xn >= 0
 	      ),
 	      Point_list
-	     )
+	     ),
+      !
      )
     ).
+
+sample_line_seg(A, B, C, Point_list, P1, P2):-
+    P1 = [X1, Y1],
+    P2 = [X2, Y2],
+    !,
+    D1 = abs(X1 - X2),
+    D2 = abs(Y1 - Y2),
+    (D1 >= D2 ->
+	 sample_line_seg_x(A, B, C, Point_list, X1, X2);
+     sample_line_seg_y(A, B, C, Point_list, Y1, Y2)
+    ).
+	 
 
 sample_line_seg_x(Line, Point_list, X1, X2):-
     line(Line, A, B, C),

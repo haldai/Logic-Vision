@@ -450,7 +450,19 @@ combination(N, List, Combs):-
 
 % checks whether line seg E1 and E2 intersected or near
 intersected_or_near(E1, E2):-
+    % intersected
     (intersected_seg(E1, E2), !);
+    % intersected point near one of the ends
+    (E1 = [P1, P2],
+     E2 = [P3, P4],
+     intersected_seg(E1, E2, Points),
+     middle_element(Points, IP),
+     ((point_near(P1, IP));%, edge_line_seg_proportion(P1, P3));
+      (point_near(P2, IP));%, edge_line_seg_proportion(P1, P4));
+      (point_near(P3, IP));%, edge_line_seg_proportion(P2, P3));
+      (point_near(P4, IP))%, edge_line_seg_proportion(P2, P4)))
+     )
+    );
     ((E1 = [P1, P2],
       E2 = [P3, P4],
       ((point_near(P1, P3));%, edge_line_seg_proportion(P1, P3));
@@ -520,8 +532,26 @@ in_combo_dist(P1, P2, T):-
 
 
 % same line segment
+same_seg([], []).
 same_seg([P1, P2], [P1, P2]).
 same_seg([P1, P2], [P2, P1]).
+
+% same line segment set
+same_seg_set([], []).
+same_seg_set([S | Ss], L):-
+    seg_in_set(S, L, Del_L),
+    delete(L, Del_L, L1),
+    same_seg_set(Ss, L1),
+    !.
+
+seg_in_set(_, [], _):-
+    fail.
+seg_in_set(Seg, [S | Ss], D):-
+    (same_seg(Seg, S) ->
+	 D = S;
+     seg_in_set(Seg, Ss, D)
+    ),
+    !.
 
 % randomly sampling a point on canvas edge
 random_point_on_canvas_edge([X, Y]):-
@@ -617,3 +647,57 @@ point_in_polygon(P, Poly):-
       !
      )
     ).
+
+% linear regression
+/* lin_reg(Xs, Ys, M, C) is true if y = Mx + C is the best straight line   */
+/*   fit for the given points (X, Y).                                      */
+/* Ax + By + C = 0 */
+lin_reg(Xs, Ys, A, B, C):-
+    length(Xs, Lx),
+    length(Ys, Ly),
+    Lx == Ly,
+    Lx > 1,
+    list_to_set(Xs, S),
+    Xs = [X_ | _],
+    length(S, L),
+    L == 1,
+    A = 1,
+    B = 0,
+    C = -X_.
+
+lin_reg(Xs, Ys, A, B, C):-
+    length(Xs, Lx),
+    length(Ys, Ly),
+    Lx == Ly,
+    Lx > 1,
+    list_to_set(Ys, S),
+    length(S, L),
+    L == 1,
+    Ys = [Y_ | _],
+    A = 0,
+    B = 1,
+    C = -Y_.
+
+lin_reg(Xs, Ys, A, B, C):-
+    length(Xs, Lx),
+    length(Ys, Ly),
+    Lx == Ly,
+    Lx > 1,
+    lin_reg(Xs, Ys, M, C_),
+    A = M,
+    B = -1,
+    C = C_.
+    
+lin_reg(Xs, Ys, M, C):-
+  sums(Xs, Ys, 0, N, 0, S_X, 0, S_Y, 0, S_XY, 0, S_XX),
+  M is (S_X * S_Y / N - S_XY) / (S_X * S_X / N - S_XX),
+  C is S_Y / N - M * S_X / N.
+
+sums([], [], N, N, S_X, S_X, S_Y, S_Y, S_XY, S_XY, S_XX, S_XX).
+sums([X|Xs], [Y|Ys], N0, N, S_X0, S_X, S_Y0, S_Y, S_XY0, S_XY, S_XX0, S_XX):-
+  N1 is N0 + 1,
+  S_X1 is S_X0 + X,
+  S_Y1 is S_Y0 + Y,
+  S_XY1 is S_XY0 + X * Y,
+  S_XX1 is S_XX0 + X * X,
+  sums(Xs, Ys, N1, N, S_X1, S_X, S_Y1, S_Y, S_XY1, S_XY, S_XX1, S_XX).
