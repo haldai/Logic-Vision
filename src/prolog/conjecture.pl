@@ -514,15 +514,15 @@ sample_edges_components(_, [], Conn_comp_list, Conn_comp_list, _, _).
 sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
     write("turn "),
     writeln(N),
-%    writeln("====Points===="),
-%    print_list(Point_list),
-%    writeln("====Combs===="),
-%    print_list(Ongoing_combs),
-%    writeln("====Comps===="),
-%    print_list(Temp_comp_list),
-%    writeln("====Sampled lines===="),
-%    print_list(Sampled_lines),
-%    writeln("========"),
+    writeln("====Points===="),
+    print_list(Point_list),
+    writeln("====Combs===="),
+    print_list(Ongoing_combs),
+    writeln("====Comps===="),
+    print_list(Temp_comp_list),
+    writeln("====Sampled lines===="),
+    print_list(Sampled_lines),
+    writeln("========"),
 %    get_char(_),
     N2 is N + 1,
     sample_edge_limit(T),
@@ -550,7 +550,10 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
 	      display_line(Edge, r),
 	      add_edge(Edge, Temp_comp_list, Temp_comp_list_1, New_edge, [], []),
 	      !,
-
+	      (New_edge == [] ->
+		   (sample_edges_components(Point_list, Other_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N2), !);
+	       true
+	      ),
 	      display_polygon_list(Temp_comp_list, g),
 	      display_polygon_list(Temp_comp_list_1, r),
 	      comps_to_edges(Temp_comp_list_1, Temp_edges_new, []),
@@ -644,7 +647,8 @@ make_new_combs(Edge, Comp_list, Comp_list_old, PL_old, Combs_old, Sampled_lines,
     append(Comb_e_e_AR, Comb_e_f_AR, Combs_2),
     append(Combs_2, Combs_old, Combs_new_),
     % remove old combinations
-    remove_points_combs(Combs_new_, PL_removed, Combs_new),
+    remove_points_combs(Combs_new_, PL_removed, Combs_3),
+    list_delete(Combs_3, Edges_new, Combs_new),
     !.
 
 %add_edge(Edge, [], Return, Temp, []):-
@@ -675,7 +679,7 @@ merge_conn_comps(Edge, Comps, New_edge, Return, T):-
     process_edge_edge_subsumption(Edge, All_edges, Subbed, Unsubbed, [], []),
     % edge is subed by existing edge, no change
     (member(Edge, Subbed) ->
-	 (Return = All_edges, !);
+	 (Return = All_edges, New_edge = [], !);
      % edge cannot be subed, continue
      (merge_edge_with_all_edges(Edge, Unsubbed, Merged_edges),
       % merge_all_edges(All_edges, All_edges, Return),
@@ -685,7 +689,7 @@ merge_conn_comps(Edge, Comps, New_edge, Return, T):-
 %      process_point_edge_subsumption(New_edge, New_other_edges, New_other_edges_1),
       ((same_seg(New_edge_, Edge), T > 1) ->
 	   (Return = Merged_edges,
-	    New_edge = New_edge_,
+	    New_edge = Edge,
 	    !);
        (T_1 is T + 1,
 	merge_conn_comps(New_edge_, [New_other_edges], New_edge, Return, T_1),
