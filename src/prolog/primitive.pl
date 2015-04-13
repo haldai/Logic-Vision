@@ -14,11 +14,11 @@ point_on_line(X, Y, A, B, C):-
 	 Yn is -(A*X + C)/B,
 	 (abs(Xn - X) =< 1.0, abs(Yn - Y) =< 1.0)
 	);
-     ((A == 0, B =\= 0) ->
+     ((A =:= 0, B =\= 0) ->
 	 Yn is -C/B, abs(Yn - Y) =< 1.0;
-      ((A =\= 0, B == 0) ->
+      ((A =\= 0, B =:= 0) ->
 	   Xn is -C/A, abs(Xn - X) =< 1.0;
-       ((A == 0, B == 0) ->
+       ((A =:= 0, B =:= 0) ->
 	    fail
        )
       )
@@ -94,11 +94,17 @@ point_on_line_seg_y(X, Y, A, B, C, Y1, Y2):-
     ).
 
 % use threshold
+point_on_line_seg_thresh(_, [P, P], _):-
+    fail.
 point_on_line_seg_thresh(Point, Seg, T):-
     Seg = [P1, P2],
     distance(Point, P1, D1),
     distance(Point, P2, D2),
     distance(P1, P2, D3),
+    ((D1 > D3, D2 > D3) ->
+	 fail;
+     true
+    ),
     Diff1 is abs((D1 + D2 - D3)/D3), % if P1-P and P2-P are short edges
     Diff2 is abs((abs(D1 - D2) - D3)/D3), % if one of P1-P and P2-P is long edge
     (((D1 >= D3; D2 >= D3), Diff2 =< T, 

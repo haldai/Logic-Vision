@@ -75,9 +75,9 @@ odd(X):-
 same_line(L1, L2):-
     L1 = [A1, B1, C1],
     L2 = [A2, B2, C2],
-    (A1 == 0 -> A2 == 0; (\+(A2 == 0), K1 is A2/A1)),
-    (B1 == 0 -> B2 == 0; (\+(B2 == 0), K2 is B2/B1)),
-    (C1 == 0 -> C2 == 0; (\+(C2 == 0), K3 is C2/C1)),
+    (A1 =:= 0 -> A2 =:= 0; (\+(A2 =:= 0), K1 is A2/A1)),
+    (B1 =:= 0 -> B2 =:= 0; (\+(B2 =:= 0), K2 is B2/B1)),
+    (C1 =:= 0 -> C2 =:= 0; (\+(C2 =:= 0), K3 is C2/C1)),
     same_line_para_thresh(T),
     ((number(K1), number(K2)) -> abs(K1 - K2) =< T; true),
     ((number(K2), number(K3)) -> abs(K2 - K3) =< T; true),
@@ -106,8 +106,8 @@ point_dist(X1, Y1, X2, Y2, Dist):-
     Dist is sqrt(D).
 
 point_dist(P1, P2, Dist):-
-    P1 is [X1, Y1],
-    P2 is [X2, Y2],
+    P1 = [X1, Y1],
+    P2 = [X2, Y2],
     !,
     point_dist(X1, Y1, X2, Y2, D),
     Dist is sqrt(D).
@@ -243,7 +243,7 @@ intersected_seg(S1, S2, Points):-
 	(line_parameters(S1, A1, B1, C1),
 	 line_parameters(S2, A2, B2, C2),
 	 D is A1*B2 - A2*B1,
-	 (D == 0 ->
+	 (D =:= 0 ->
 	      (sample_line_seg(S1, PL1),
 	       sample_line_seg(S2, PL2),
 	       findall(P, (member(P, PL1), member(P, PL2)), Points)
@@ -263,7 +263,7 @@ intersected_seg_ex(S1, S2, Points):-
     line_parameters(S1, A1, B1, C1),
     line_parameters(S2, A2, B2, C2),
     D is A1*B2 - A2*B1,
-    (D == 0 ->
+    (D =:= 0 ->
 	 (sample_line_seg(S1, PL1),
 	  sample_line_seg(S2, PL2),
 	  findall(P, (member(P, PL1), member(P, PL2)), Points)
@@ -282,7 +282,7 @@ intersected_lines(L1, L2, Points):-
     L1 = [A1, B1, C1],
     L2 = [A2, B2, C2],
     D is A1*B2 - A2*B1,
-    (D == 0 ->
+    (D =:= 0 ->
 	 (sample_line(A1, B1, C1, PL1),
 	  sample_line(A2, B2, C2, PL2),
 	  findall(P, (member(P, PL1), member(P, PL2)), Points)
@@ -376,7 +376,7 @@ get_left_right_most_points_in_list(Point_list, Left, Right):-
     get_down_most_point(R, [R_d_x, R_d_y], [-1, -1]),
     length(L, L_l),
     length(R, L_r),
-    ((L_l == 1, L_r == 1) ->
+    ((L_l =:= 1, L_r =:= 1) ->
 	 (L = [Left | _],
 	  R = [Right | _]
 	 );
@@ -481,17 +481,17 @@ intersected_or_near(E1, E2):-
       (point_near_ex(P4, IP)))%, edge_line_seg_proportion(P2, P4)))
      ),
      !
+    ),
+    ((E1 = [P1, P2],
+      E2 = [P3, P4],
+      ((point_near_ex(P1, P3));%, edge_line_seg_proportion(P1, P3));
+       (point_near_ex(P1, P4));%, edge_line_seg_proportion(P1, P4));
+       (point_near_ex(P2, P3));%, edge_line_seg_proportion(P2, P3));
+       (point_near_ex(P2, P4))%, edge_line_seg_proportion(P2, P4))
+      ),
+      !
+     )
     ).
-%    ((E1 = [P1, P2],
-%      E2 = [P3, P4],
-%      ((point_near_ex(P1, P3));%, edge_line_seg_proportion(P1, P3));
-%       (point_near_ex(P1, P4));%, edge_line_seg_proportion(P1, P4));
-%       (point_near_ex(P2, P3));%, edge_line_seg_proportion(P2, P3));
-%       (point_near_ex(P2, P4))%, edge_line_seg_proportion(P2, P4))
-%      ),
-%      !
-%     )
-%    ).
 
 % get end points of all edges in a list
 edges_ends(Edges, Ends, Temp):-
@@ -548,16 +548,14 @@ point_near_ex(P1, P2):-
 in_combo_dist(P1, P2):-
     distance(P1, P2, D),
     image_diagonal(Dia),
-    combo_dist_thresh(T),
+    combo_max_dist_thresh(T),
     D/Dia =< T.
 
 in_combo_dist(P1, P2, Tmax, Tmin):-
     distance(P1, P2, D),
     image_diagonal(Dia),
     D/Dia =< Tmax,
-    D/Dia >= Tmin.
-
-
+    D/Dia > Tmin.
 % same line segment
 same_seg([], []).
 same_seg([P1, P2], [P1, P2]).
@@ -587,13 +585,13 @@ seg_in_set(Seg, [S | Ss], D):-
 random_point_on_canvas_edge([X, Y]):-
     img_size(W, H),
     random_between(0, 3, L), % on which edge
-    (L == 0 -> 
+    (L =:= 0 -> 
 	 (X is 0, H1 is H - 1, random_between(0, H1, Y), !);
-     (L == 1 -> 
+     (L =:= 1 -> 
 	  (X is W - 1, H1 is H - 1, random_between(0, H1, Y), !);
-      (L == 2 -> 
+      (L =:= 2 -> 
 	   (Y is 0, W1 is W - 1, random_between(0, W1, X), !);
-       (L == 3 -> 
+       (L =:= 3 -> 
 	    (Y is H - 1, W1 is W - 1, random_between(0, W1, X), !);
 	fail
        )
@@ -612,6 +610,8 @@ points_rect([Point | Points], P_min, P_max, Temp_min, Temp_max):-
     (X > X_max -> New_X_max is X; New_X_max is X_max),
     (Y > Y_max -> New_Y_max is Y; New_Y_max is Y_max),
     points_rect(Points, P_min, P_max, [New_X_min, New_Y_min], [New_X_max, New_Y_max]).
+
+
 
 poly_rect(Poly, P_min, P_max):-
     edges_ends(Poly, Points),
@@ -685,12 +685,12 @@ point_in_polygon(P, Poly):-
 lin_reg(Xs, Ys, A, B, C):-
     length(Xs, Lx),
     length(Ys, Ly),
-    Lx == Ly,
+    Lx =:= Ly,
     Lx > 1,
     list_to_set(Xs, S),
     Xs = [X_ | _],
     length(S, L),
-    L == 1,
+    L =:= 1,
     !,
     A is 1,
     B is 0,
@@ -699,11 +699,11 @@ lin_reg(Xs, Ys, A, B, C):-
 lin_reg(Xs, Ys, A, B, C):-
     length(Xs, Lx),
     length(Ys, Ly),
-    Lx == Ly,
+    Lx =:= Ly,
     Lx > 1,
     list_to_set(Ys, S),
     length(S, L),
-    L == 1,
+    L =:= 1,
     Ys = [Y_ | _],
     !,
     A is 0,
@@ -713,7 +713,7 @@ lin_reg(Xs, Ys, A, B, C):-
 lin_reg(Xs, Ys, A, B, C):-
     length(Xs, Lx),
     length(Ys, Ly),
-    Lx == Ly,
+    Lx =:= Ly,
     Lx > 1,
     !,
     lin_reg(Xs, Ys, M, C_),
@@ -734,3 +734,25 @@ sums([X|Xs], [Y|Ys], N0, N, S_X0, S_X, S_Y0, S_Y, S_XY0, S_XY, S_XX0, S_XX):-
   S_XY1 is S_XY0 + X * Y,
   S_XX1 is S_XX0 + X * X,
   sums(Xs, Ys, N1, N, S_X1, S_X, S_Y1, S_Y, S_XY1, S_XY, S_XX1, S_XX).
+
+% screening points within a rect angle with soft size
+screening_points_of_rect(Ps, [P_min, P_max], Soft, Re):-
+    P_min = [Xi, Yi],
+    P_max = [Xm, Ym],
+    Xii is Xi - Soft,
+    Yii is Yi - Soft,
+    P_i = [Xii, Yii],
+    Xmm is Xm + Soft,
+    Ymm is Ym + Soft,
+    P_m = [Xmm, Ymm],
+    screening_points_in_rect(Ps, [P_i, P_m], Re, []).
+
+screening_points_in_rect([], _, Re, Re).
+screening_points_in_rect([P | Ps], [P_i, P_m], Re, T):-
+    point_in_rect(P, P_i, P_m),
+    append(T, [P], T1),
+    screening_points_in_rect(Ps, [P_i, P_m], Re, T1).
+screening_points_in_rect([P | Ps], [P_i, P_m], Re, T):-
+    not(point_in_rect(P, P_i, P_m)),
+    screening_points_in_rect(Ps, [P_i, P_m], Re, T).
+
