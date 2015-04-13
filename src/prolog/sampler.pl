@@ -162,6 +162,7 @@ sample_line_seg_y(Line, Point_list, Y1, Y2):-
     line(Line, A, B, C),
     sample_line_seg_y(A, B, C, Point_list, Y1, Y2).
 
+sample_line_seg([[X, Y], [X, Y]], [[X, Y]]).
 sample_line_seg(S, Point_list):-
     S = [[X1, Y1], [X2, Y2]],
     line_parameters(S, A, B, C),

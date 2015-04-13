@@ -340,6 +340,16 @@ get_coordinates(Point_list, Return):-
      
 
 % edge subsumption: E1 subsume E2
+edge_subsume([X, Y1], [X, Y2]):-
+    point_near(Y1, Y2), !.
+edge_subsume([X1, Y], [X2, Y]):-
+    point_near(X1, X2), !.
+edge_subsume([X1, Y1], [X2, Y2]):-
+    connected(X1, X2),
+    point_near(Y1, Y2), !.
+edge_subsume([X1, Y1], [X2, Y2]):-
+    connected(Y1, Y2),
+    point_near(X1, X2), !.
 edge_subsume(E1, E2):-
     seg_length(E1, L1),
     seg_length(E2, L2),
@@ -347,7 +357,7 @@ edge_subsume(E1, E2):-
     E2 = [P1, P2],
     edge_subsume_thresh(T),
     point_on_line_seg_thresh(P1, E1, T),
-    point_on_line_seg_thresh(P2, E1, T).
+    point_on_line_seg_thresh(P2, E1, T), !.
 
 edge_subsume_last(E1, E2):-
     E1 = [P1, P2],
