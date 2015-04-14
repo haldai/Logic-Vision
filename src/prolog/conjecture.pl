@@ -1109,31 +1109,57 @@ readjust_intersected_edges(Edge, [I | Intscts], Other_edges, Conn_points, Return
 		 );
 	     (true, !)
 	    ),
-	    New_edge = [NP1, NP2],
-	    intersection(E, Conn_points, Conn_it),
-	    list_delete(Conn_it, New_edge, Changed_conn),
-	    (not(Changed_conn == []) ->
-		 (Changed_conn = [Ch_conn | _],
-		  list_delete(New_edge, E, Changed_IP),
-		  Changed_IP = [Ch_IP | _],
-		  append(Temp_chged_conn_pair, [[Ch_conn, Ch_IP]], Temp_chged_conn_pair_1),
-		  !
-		 );
-	     (Temp_chged_conn_pair_1 = Temp_chged_conn_pair, !)
-	    ),
-	    Edge = [I1, I2],
-	    edge_points_proportion_threshold(PT),
-	    edge_point_thresh(GT),
-	    edge_point_relax(RG),
-	    edge_points_proportion_relax(RP),
-	    PT1 is (PT - RP),
-	    GT1 is (GT - RG),
-	    ((edge_line_seg_proportion_grad(NP1, NP2, GT1, PT1),
-	      edge_line_seg_proportion_grad(I1, I2, GT1, PT1)
-	     ) ->
+	    list_delete(E, New_edge, Removed),
+	    (Removed == [] ->
 		 (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
-	     (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
-	    )
+	     (seg_length(New_edge, LN),
+	      seg_length(E, LE),
+	      % if the is edge extended, the extended part should also be an edge
+	      (LE < LN ->
+		   (edge_points_proportion_threshold(PT),
+		    edge_point_thresh(GT),
+		    edge_point_relax(RG),
+		    edge_points_proportion_relax(RP),
+		    PT1 is (PT - RP),
+		    GT1 is (GT - RG),
+		    Removed = [Removed_P | _],
+		    ((edge_line_seg_proportion_grad(Removed_P, IP, GT1, PT1)
+		     ) ->
+			 (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
+		     (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
+		    ),
+		    !
+		   );
+	       (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !)
+	      )
+	     )
+	    ),
+%    	    New_edge = [NP1, NP2],
+%	    intersection(E, Conn_points, Conn_it),
+%	    list_delete(Conn_it, New_edge, Changed_conn),
+%	    (not(Changed_conn == []) ->
+%		 (Changed_conn = [Ch_conn | _],
+%		  list_delete(New_edge, E, Changed_IP),
+%		  Changed_IP = [Ch_IP | _],
+%		  append(Temp_chged_conn_pair, [[Ch_conn, Ch_IP]], Temp_chged_conn_pair_1),
+%		  !
+%		 );
+%	     (Temp_chged_conn_pair_1 = Temp_chged_conn_pair, !)
+%	    ),
+%	    Edge = [I1, I2],
+%	    edge_points_proportion_threshold(PT),
+%	    edge_point_thresh(GT),
+%	    edge_point_relax(RG),
+%	    edge_points_proportion_relax(RP),
+%	    PT1 is (PT - RP),
+%	    GT1 is (GT - RG),
+%	    ((edge_line_seg_proportion_grad(NP1, NP2, GT1, PT1),
+%	      edge_line_seg_proportion_grad(I1, I2, GT1, PT1)
+%	     ) ->
+%		 (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
+%	     (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
+%	    )
+	    !
 	   ),
 	   !
 	  ),
@@ -1162,19 +1188,32 @@ readjust_intersected_edges(Edge, [I | Intscts], Other_edges, Conn_points, Return
 	   );
        (Temp_chged_conn_pair_1 = Temp_chged_conn_pair, !)
       ),
-      New_edge = [L, R],
-      Edge = [I1, I2],
-      edge_points_proportion_threshold(PT),
-      edge_point_thresh(GT),
-      edge_point_relax(RG),
-      edge_points_proportion_relax(RP),
-      PT1 is (PT - RP),
-      GT1 is (GT - RG),
-      ((edge_line_seg_proportion_grad(L, R, GT1, PT1),
-	edge_line_seg_proportion_grad(I1, I2, GT1, PT1)
-       ) ->
+      list_delete(E, New_edge, Removed),
+      (Removed == [] ->
 	   (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
-       (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
+       (seg_length(New_edge, LN),
+	seg_length(E, LE),
+	% if the is edge extended, the extended part should also be an edge
+	(LE < LN ->
+	     (edge_points_proportion_threshold(PT),
+	      edge_point_thresh(GT),
+	      edge_point_relax(RG),
+	      edge_points_proportion_relax(RP),
+	      PT1 is (PT - RP),
+	      GT1 is (GT - RG),
+	      list_delete(New_edge, E, Added),
+	      Added = [IP | _],
+	      Removed = [Removed_P | _],
+	      ((edge_line_seg_proportion_grad(Removed_P, IP, GT1, PT1)
+	       ) ->
+		   (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
+	       (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
+	      ),
+	      !
+	     );
+	 (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !)
+	)
+       )
       ),
       !
      ),
