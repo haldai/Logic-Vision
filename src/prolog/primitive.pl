@@ -12,16 +12,19 @@ point_on_line(X, Y, A, B, C):-
     ((A =\= 0, B =\= 0) ->
 	(Xn is -(B*Y + C)/A,
 	 Yn is -(A*X + C)/B,
-	 (abs(Xn - X) =< 1.0, abs(Yn - Y) =< 1.0)
+	 (abs(Xn - X) =< 1.0, abs(Yn - Y) =< 1.0),
+	 !
 	);
      ((A =:= 0, B =\= 0) ->
-	 Yn is -C/B, abs(Yn - Y) =< 1.0;
+	 (Yn is -C/B, abs(Yn - Y) =< 1.0, !);
       ((A =\= 0, B =:= 0) ->
-	   Xn is -C/A, abs(Xn - X) =< 1.0;
+	   (Xn is -C/A, abs(Xn - X) =< 1.0, !);
        ((A =:= 0, B =:= 0) ->
-	    fail
-       )
-      )
+	    (fail, !)
+       ),
+       !
+      ),
+      !
      )
     ).
 
@@ -33,13 +36,15 @@ point_on_line(X, Y, A, B, C):-
     number(C),
     !,
     (A =\= 0 -> 
-	 X_ is -(B*Y + C)/A;
+	 (X_ is -(B*Y + C)/A, !);
      ((B =\= 0, Y =:= -C/B) -> 
 	  (img_size(W, _),
 	   W_ is W - 1,
-	   between(0, W_, X_)
+	   between(0, W_, X_),
+	   !
 	  );
-      fail
+      (fail, !),
+      !
      )
     ),
     X is truncate(X_ + 0.5).
@@ -52,13 +57,15 @@ point_on_line(X, Y, A, B, C):-
     number(C),
     !,
     (B =\= 0 -> 
-	 Y_ is -(A*X + C)/B;
+	 (Y_ is -(A*X + C)/B, !);
      ((A =\= 0, X =:= -C/A) -> 
 	  (img_size(_, H), 
 	   H_ is H - 1,
-	   between(0, H_, Y_)
+	   between(0, H_, Y_),
+	   !
 	  );
-      fail
+      (fail, !),
+      !
      )
     ),
     Y is truncate(Y_ + 0.5).
@@ -74,8 +81,8 @@ point_on_line_seg_x(X, Y, A, B, C, X1, X2):-
     number(C),
     point_on_line(X, Y, A, B, C),
     (X1 =< X2 ->
-	 (X >= X1, X =< X2);
-     (X =< X1, X >= X2)
+	 (X >= X1, X =< X2, !);
+     (X =< X1, X >= X2, !)
     ).
 
 % only checks whether a point is in line segment
@@ -89,30 +96,34 @@ point_on_line_seg_y(X, Y, A, B, C, Y1, Y2):-
     number(C),
     point_on_line(X, Y, A, B, C),
     (Y1 =< Y2 ->
-	 (Y >= Y1, Y =< Y2);
+	 (Y >= Y1, Y =< Y2, !);
      (Y =< Y1, Y >= Y2)
     ).
 
 % use threshold
 point_on_line_seg_thresh(_, [P, P], _):-
-    fail.
+    fail, !.
 point_on_line_seg_thresh(Point, Seg, T):-
     Seg = [P1, P2],
     distance(Point, P1, D1),
     distance(Point, P2, D2),
     distance(P1, P2, D3),
     ((D1 > D3, D2 > D3) ->
-	 fail;
-     true
+	 (fail, !);
+     (true, !)
     ),
     Diff1 is abs((D1 + D2 - D3)/D3), % if P1-P and P2-P are short edges
     Diff2 is abs((abs(D1 - D2) - D3)/D3), % if one of P1-P and P2-P is long edge
-    (((D1 >= D3; D2 >= D3), Diff2 =< T, 
-      (point_near(Point, P1);point_near(Point, P2))
-     );
-     ((D1 < D3, D2 < D3), Diff1 =< T)
-    ),
-    !.
+    (((D1 >= D3); (D2 >= D3)) ->
+	 ((Diff2 =< T, 
+	   (point_near(Point, P1)); (point_near(Point, P2))),
+	  !
+	 );
+     ((D1 < D3, D2 < D3) ->
+	   (Diff1 =< T, !);
+       (fail, !)
+     )
+    ).
 
 point_on_line_seg(Point, Seg):-
     on_seg_thresh(T),
@@ -224,8 +235,10 @@ inside_points_rec(X1, Y1, X2, Y2, N, Inside_points):-
 	(connected(X1, Y1, X2, Y2) ->
 	     Inside_points = [];
 	    (midpoint(X1, Y1, X2, Y2, X, Y),
-	     Inside_points = [[X, Y]]
-	    )
+	     Inside_points = [[X, Y]],
+	     !
+	    ),
+	    !
 	);
     (midpoint(X1, Y1, X2, Y2, X, Y),
      N2 is N - 1,
@@ -233,7 +246,8 @@ inside_points_rec(X1, Y1, X2, Y2, N, Inside_points):-
      append(Inside_points1, [[X, Y]], Temp_points),
      inside_points_rec(X, Y, X2, Y2, N2, Inside_points2),
      append(Temp_points, Inside_points2, Temp_points2),
-     Inside_points = Temp_points2
+     Inside_points = Temp_points2,
+     !
     ).
 
 avg_grad_val_seg([P, P], 0.0).
@@ -266,6 +280,20 @@ edge_points_proportion(Point_list, Proportion):-
 	),
     Proportion is Count/N.
 
+edge_points_proportion_grad(Point_list, Proportion, Grad_thresh):-
+    length(Point_list, N),
+    aggregate_all(
+	    count,
+	    (member(Point, Point_list),
+	     Point = [X, Y],
+	     edge_point(X, Y, V, _),
+	     V >= Grad_thresh
+	    ),
+	    Count
+	),
+    Proportion is Count/N.
+
+
 % use proportion of edge points to judge the existance of edge
 edge_line_seg_proportion(X1, Y1, X2, Y2, N, Thresh):-
 %    edge_point(X1, Y1),
@@ -294,6 +322,15 @@ edge_line_seg_proportion(P1, P2, Thresh):-
     P2 = [X2, Y2],
     recursion_limit(N),
     edge_line_seg_proportion(X1, Y1, X2, Y2, N, Thresh).
+
+edge_line_seg_proportion_grad(P1, P2, Grad_thresh, Prop_thresh):-
+    P1 = [X1, Y1],
+    P2 = [X2, Y2],
+    recursion_limit(N),
+    inside_points_rec(X1, Y1, X2, Y2, N, Inside_points),
+    append(Inside_points, [[X1, Y1], [X2, Y2]], Inside_points_),
+    edge_points_proportion_grad(Inside_points_, Proportion, Grad_thresh),
+    Proportion >= Prop_thresh.
 
 % define edge_point/2
 edge_point(X, Y):-

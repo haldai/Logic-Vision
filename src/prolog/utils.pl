@@ -8,7 +8,7 @@ print_list_ln(L):-
 
 print_list(L):-
     L == [] ->
-	writeln("");
+	(writeln(""), !);
     (write("["),
      L = [H | T],
      write(H),
@@ -34,9 +34,10 @@ list_add_nodup(L, [], L).
 list_add_nodup(List, Add, Return):-
     Add = [Head | Tail],
     (member(Head, List) ->
-	 list_add_nodup(List, Tail, Return);
+	 (list_add_nodup(List, Tail, Return), !);
      (append(List, [Head], List_2),
-      list_add_nodup(List_2, Tail, Return)
+      list_add_nodup(List_2, Tail, Return),
+      !
      )
     ).
 
@@ -50,14 +51,16 @@ list_insert(Val, List, 1, [Val | List]).
 % elements in list 1 that are not member of list 2
 list_not_member(List_1, List_2, Return, Temp):-
     List_1 == [] ->
-	Return = Temp;
+	(Return = Temp, !);
     (List_1 = [Head | Tail],
      (\+member(Head, List_2) ->
 	  (append(Temp, [Head], Temp_1),
-	   list_not_member(Tail, List_2, Return, Temp_1)
+	   list_not_member(Tail, List_2, Return, Temp_1),
+	   !
 	  );
       list_not_member(Tail, List_2, Return, Temp)
-     )
+     ),
+     !
     ).
 
 list_not_member(List_1, List_2, Return):-
@@ -75,13 +78,13 @@ odd(X):-
 same_line(L1, L2):-
     L1 = [A1, B1, C1],
     L2 = [A2, B2, C2],
-    (A1 =:= 0 -> A2 =:= 0; (\+(A2 =:= 0), K1 is A2/A1)),
-    (B1 =:= 0 -> B2 =:= 0; (\+(B2 =:= 0), K2 is B2/B1)),
-    (C1 =:= 0 -> C2 =:= 0; (\+(C2 =:= 0), K3 is C2/C1)),
+    (A1 =:= 0 -> (A2 =:= 0, !); (\+(A2 =:= 0), K1 is A2/A1), !),
+    (B1 =:= 0 -> (B2 =:= 0, !); (\+(B2 =:= 0), K2 is B2/B1), !),
+    (C1 =:= 0 -> (C2 =:= 0, !); (\+(C2 =:= 0), K3 is C2/C1), !),
     same_line_para_thresh(T),
-    ((number(K1), number(K2)) -> abs(K1 - K2) =< T; true),
-    ((number(K2), number(K3)) -> abs(K2 - K3) =< T; true),
-    ((number(K3), number(K1)) -> abs(K3 - K1) =< T; true).
+    ((number(K1), number(K2)) -> (abs(K1 - K2) =< T, !); (true, !)),
+    ((number(K2), number(K3)) -> (abs(K2 - K3) =< T, !); (true, !)),
+    ((number(K3), number(K1)) -> (abs(K3 - K1) =< T, !); (true, !)).
 
 % define inner_product/3: Inner product of two lists (vectors)
 inner_product([], [], 0).
@@ -146,24 +149,24 @@ display_line(Line, C):-
 % display a list of lines
 display_line_list(Line_list, C):-
     (Line_list == [] ->
-	 true;
+	 (true, !);
      (Line_list = [Head | Tail],
       display_line(Head, C),
-      display_line_list(Tail, C)
+      display_line_list(Tail, C),
+      !
      )
-    ),
-    !.
+    ).
 
 % display polygon list
 display_polygon_list(Polygon_list, C):-
     (Polygon_list == [] ->
-	 true;
+	 (true, !);
      (Polygon_list = [H | T],
       display_line_list(H, C),
-      display_polygon_list(T, C)
+      display_polygon_list(T, C),
+      !
      )
-    ),
-    !.
+    ).
 
 % random point
 random_point(X, Y):-
@@ -173,21 +176,42 @@ random_point(X, Y):-
     X = R1,
     Y = R2.
 
-% connectivity of 2 points
-connected(X1, _, X2, _):-
+% connected points on line point sequence
+% [X1, Y1] and [X2, Y2] must be sequencial points on a line!!!
+line_seqqed(X1, Y1, X2, Y2):-
+    (abs(X1 - X2) < 2, !);
+    (abs(Y1 - Y2) < 2, !).
+
+line_seqqed(P1, P2):-
+    (P1 = []; P2 = []) ->
+	(true, !);
+    (P1 = [X1, Y1 | _],
+     P2 = [X2, Y2 | _],
+     !,
+     line_seqqed(X1, Y1, X2, Y2),
+     !
+    ).
+
+line_seqqed(P1, P2):-
+    point(P1, X1, Y1),
+    point(P2, X2, Y2),
+    !,
+    connected(X1, Y1, X2, Y2).
+
+% connectivity of 2 points    
+connected(X1, Y1, X2, Y2):-
     abs(X1 - X2) < 2,
-    !.
-connected(_, Y1, _, Y2):-
     abs(Y1 - Y2) < 2,
     !.
 
 connected(P1, P2):-
     (P1 = []; P2 = []) ->
-	true;
+	(true, !);
     (P1 = [X1, Y1 | _],
      P2 = [X2, Y2 | _],
      !,
-     connected(X1, Y1, X2, Y2)
+     connected(X1, Y1, X2, Y2),
+     !
     ).
 
 connected(P1, P2):-
@@ -246,18 +270,20 @@ intersected_seg(S1, S2, Points):-
 	 (D =:= 0 ->
 	      (sample_line_seg(S1, PL1),
 	       sample_line_seg(S2, PL2),
-	       findall(P, (member(P, PL1), member(P, PL2)), Points)
+	       findall(P, (member(P, PL1), member(P, PL2)), Points),
+	       !
 	      );
 	  (Dx is -(C1*B2 - C2*B1),
 	   Dy is (C1*A2 - C2*A1),
 	   X is truncate(Dx/D + 0.5),
 	   Y is truncate(Dy/D + 0.5),
-	   Points = [[X, Y]]
+	   Points = [[X, Y]],
+	   !
 	  )
 	 ),
 	 !
 	);
-    Points = [].
+    (Points = [], !).
 
 intersected_seg_ex(S1, S2, Points):-
     line_parameters(S1, A1, B1, C1),
@@ -266,13 +292,15 @@ intersected_seg_ex(S1, S2, Points):-
     (D =:= 0 ->
 	 (sample_line_seg(S1, PL1),
 	  sample_line_seg(S2, PL2),
-	  findall(P, (member(P, PL1), member(P, PL2)), Points)
+	  findall(P, (member(P, PL1), member(P, PL2)), Points),
+	  !
 	 );
      (Dx is -(C1*B2 - C2*B1),
       Dy is (C1*A2 - C2*A1),
       X is truncate(Dx/D + 0.5),
       Y is truncate(Dy/D + 0.5),
-      Points = [[X, Y]]
+      Points = [[X, Y]],
+      !
      )
     ), !.
 
@@ -285,13 +313,15 @@ intersected_lines(L1, L2, Points):-
     (D =:= 0 ->
 	 (sample_line(A1, B1, C1, PL1),
 	  sample_line(A2, B2, C2, PL2),
-	  findall(P, (member(P, PL1), member(P, PL2)), Points)
+	  findall(P, (member(P, PL1), member(P, PL2)), Points),
+	  !
 	 );
      (Dx is -(C1*B2 - C2*B1),
       Dy is (C1*A2 - C2*A1),
       X is truncate(Dx/D + 0.5),
       Y is truncate(Dy/D + 0.5),
-      Points = [[X, Y]]
+      Points = [[X, Y]],
+      !
      )
     ).
 
@@ -299,8 +329,8 @@ intersected_lines(L1, L2, Points):-
 last_ele(List, X):-
     List == []
     ->
-	X = [];
-    last(List, X).
+	(X = [], !);
+    (last(List, X), !).
 
 % most left and most right points; most upward and downward points
 get_left_right_most_points_in_list([], Left, Right, Left, Right).
@@ -311,36 +341,44 @@ get_left_right_most_points_in_list([P | Ps], Left, Right, Temp_left, Temp_right)
     R = [X_r, _],
     P = [X_p, _],
     (X_p < X_l ->
-	 (Temp_left_1 = [P], Temp_right_1 = Temp_right);
+	 (Temp_left_1 = [P], Temp_right_1 = Temp_right, !);
      (X_p > X_r ->
-	  (Temp_right_1 = [P], Temp_left_1 = Temp_left);
+	  (Temp_right_1 = [P], Temp_left_1 = Temp_left), !;
       ((X_p == X_l, X_p == X_r) ->
 	   (append(Temp_left, [P], Temp_left_1), 
-	    append(Temp_right, [P], Temp_right_1)
+	    append(Temp_right, [P], Temp_right_1),
+	    !
 	   );
        ((X_p == X_l, X_p < X_r) ->
 	    (append(Temp_left, [P], Temp_left_1),
-	     Temp_right_1 = Temp_right
+	     Temp_right_1 = Temp_right,
+	     !
 	    );
 	((X_p == X_r, X_p > X_l) ->
 	     (append(Temp_right, [P], Temp_right_1),
-	      Temp_left_1 = Temp_left
+	      Temp_left_1 = Temp_left,
+	      !
 	     );
-	 (Temp_left_1 = Temp_left, Temp_right_1 = Temp_right)
-	)
-       )
-      )
-     )
+	 (Temp_left_1 = Temp_left, Temp_right_1 = Temp_right, !),
+	 !
+	),
+	!
+       ),
+       !
+      ),
+      !
+     ),
+     !
     ),
-    get_left_right_most_points_in_list(Ps, Left, Right, Temp_left_1, Temp_right_1).
+    get_left_right_most_points_in_list(Ps, Left, Right, Temp_left_1, Temp_right_1), !.
 
 get_up_most_point([], Return, Return).
 get_up_most_point([P | Ps], Return, Temp):-
     P = [_, Y_p],
     Temp = [_, Y_t],
     (Y_p < Y_t -> 
-	 Temp_1 = P;
-     Temp_1 = Temp
+	 (Temp_1 = P, !);
+     (Temp_1 = Temp, !)
     ),
     get_up_most_point(Ps, Return, Temp_1).
 
@@ -349,8 +387,8 @@ get_down_most_point([P | Ps], Return, Temp):-
     P = [_, Y_p],
     Temp = [_, Y_t],
     (Y_p > Y_t -> 
-	 Temp_1 = P;
-     Temp_1 = Temp
+	 (Temp_1 = P, !);
+     (Temp_1 = Temp, !)
     ),
     get_down_most_point(Ps, Return, Temp_1).
 
@@ -360,13 +398,14 @@ get_left_right_most_points_in_list(Point_list, Left, Right):-
     F = [X_1, Y_1],
     S = [X_2, Y_2],
     (X_1 < X_2 ->
-	 (L_ = F, R_ = S);
+	 (L_ = F, R_ = S, !);
      (X_1 > X_2 ->
-	  (L_ = S, R_ = F);
+	  (L_ = S, R_ = F, !);
       (Y_1 < Y_2 ->
-	   (L_ = F, R_ = S);
-       (L_ = S, R_ = F)
-      )
+	   (L_ = F, R_ = S, !);
+       (L_ = S, R_ = F, !)
+      ),
+      !
      )
     ),
     get_left_right_most_points_in_list(Tail, L, R, [L_], [R_]),
@@ -378,46 +417,48 @@ get_left_right_most_points_in_list(Point_list, Left, Right):-
     length(R, L_r),
     ((L_l =:= 1, L_r =:= 1) ->
 	 (L = [Left | _],
-	  R = [Right | _]
+	  R = [Right | _],
+	  !
 	 );
      (L_d_y > R_d_y -> % left down's position is lower than right down's
 	   (Left = [L_d_x, L_d_y],
-	    Right = [R_u_x, R_u_y]
+	    Right = [R_u_x, R_u_y],
+	    !
 	   );
        (L_u_y < R_u_y -> % left up's position is higher than right up's
 	    (Left = [L_u_x, L_u_y],
-	     Right = [R_d_x, R_d_y]
+	     Right = [R_d_x, R_d_y],
+	     !
 	    );
 	(Left = [L_u_x, L_u_y],
-	 Right = [R_d_x, R_d_y]
-	)
-       )
+	 Right = [R_d_x, R_d_y],
+	 !
+	),
+	!
+       ),
+       !
       )
      ).
 
 % from point list get continuous intervals
 continuous_intervals(Point_list, Temp_interval_list, Buff, Interval_list):-
     var(Interval_list),
-    (
-	Point_list = []
-	->
-	    append(Temp_interval_list, [Buff], Interval_list);
-	(
-	    Point_list = [P1 | OtherP],
-	    last_ele(Buff, LastP),
-	    (
-		connected(P1, LastP)
-		->
-		    (
-			append(Buff, [P1], Buff2),
-			continuous_intervals(OtherP, Temp_interval_list, Buff2, Interval_list)
-		    );
-		(
-		    append(Temp_interval_list, [Buff], Temp_interval_list2),
-		    continuous_intervals(OtherP, Temp_interval_list2, [P1], Interval_list)
-		)
-	    )
-	)
+    (Point_list = [] ->
+	 (append(Temp_interval_list, [Buff], Interval_list), !);
+     (Point_list = [P1 | OtherP],
+      last_ele(Buff, LastP),
+      (line_seqqed(P1, LastP) ->
+	   (append(Buff, [P1], Buff2),
+	    continuous_intervals(OtherP, Temp_interval_list, Buff2, Interval_list),
+	    !
+	   );
+       (append(Temp_interval_list, [Buff], Temp_interval_list2),
+	continuous_intervals(OtherP, Temp_interval_list2, [P1], Interval_list),
+	!
+       )
+      ),
+      !
+     )
     ).
 
 continuous_intervals(Point_list, Interval_list):-
@@ -441,13 +482,14 @@ comb_idx(N, [X|T], [X|Comb]):-
     N > 0,
     N1 is N - 1,
     comb_idx(N1, T, Comb).
+
 comb_idx(N, [_|T], Comb):-
     N > 0,
     comb_idx(N, T, Comb).
 
 get_elements(Comb_idx_list, List, Comb_element, Temp_list):-
     Comb_idx_list == [] ->
-	Comb_element = Temp_list;
+	(Comb_element = Temp_list, !);
     (Comb_idx_list = [Idx | Tail],
      nth1(Idx, List, Ele),
      append(Temp_list, [Ele], Temp_list_),
@@ -470,24 +512,26 @@ combination(N, List, Combs):-
 intersected_or_near(E1, E2):-
     % intersected
     (intersected_seg(E1, E2), !);
-    % intersected point near one of the ends
+    % intersected point on edge
     (E1 = [P1, P2],
      E2 = [P3, P4],
      intersected_seg_ex(E1, E2, Points),
      middle_element(Points, IP),
-     (((point_near_ex(P1, IP));%, edge_line_seg_proportion(P1, P3));
-      (point_near_ex(P2, IP))),%, edge_line_seg_proportion(P1, P4));
-      ((point_near_ex(P3, IP));%, edge_line_seg_proportion(P2, P3));
-      (point_near_ex(P4, IP)))%, edge_line_seg_proportion(P2, P4)))
+     ((((point_near_ex(P1, IP), !);
+      (point_near_ex(P2, IP))),
+      ((point_near_ex(P3, IP), !);
+      (point_near_ex(P4, IP))), !);
+      (point_on_line_seg(IP, E1),
+       point_on_line_seg(IP, E2))
      ),
      !
-    ),
+    );
     ((E1 = [P1, P2],
       E2 = [P3, P4],
-      ((point_near_ex(P1, P3));%, edge_line_seg_proportion(P1, P3));
-       (point_near_ex(P1, P4));%, edge_line_seg_proportion(P1, P4));
-       (point_near_ex(P2, P3));%, edge_line_seg_proportion(P2, P3));
-       (point_near_ex(P2, P4))%, edge_line_seg_proportion(P2, P4))
+      ((point_near_ex(P1, P3), !);%, edge_line_seg_proportion(P1, P3));
+       (point_near_ex(P1, P4), !);%, edge_line_seg_proportion(P1, P4));
+       (point_near_ex(P2, P3), !);%, edge_line_seg_proportion(P2, P3));
+       (point_near_ex(P2, P4), !)%, edge_line_seg_proportion(P2, P4))
       ),
       !
      )
@@ -496,16 +540,17 @@ intersected_or_near(E1, E2):-
 % get end points of all edges in a list
 edges_ends(Edges, Ends, Temp):-
     Edges == [] ->
-	list_to_set(Temp, Ends);
+	(list_to_set(Temp, Ends), !);
     (Edges = [Head | Tail],
      Head = [P1, P2],
      append(Temp, [P1], Temp_1),
      append(Temp_1, [P2], Temp_2),
-     edges_ends(Tail, Ends, Temp_2)
+     edges_ends(Tail, Ends, Temp_2),
+     !
     ).
 
 edges_ends(Edges, Ends):-
-    edges_ends(Edges, Ends, []).
+    edges_ends(Edges, Ends, []), !.
 
 % define distance of two points
 distance(X1, Y1, X2, Y2, D):-
@@ -523,6 +568,7 @@ distance(P1, P2, D):-
     !,
     distance(X1, Y1, X2, Y2, D).
 
+seg_length([], 0).
 seg_length(S, L):-
     S = [P1, P2],
     distance(P1, P2, L).
@@ -549,13 +595,15 @@ in_combo_dist(P1, P2):-
     distance(P1, P2, D),
     image_diagonal(Dia),
     combo_max_dist_thresh(T),
-    D/Dia =< T.
+    D/Dia =< T,
+    !.
 
 in_combo_dist(P1, P2, Tmax, Tmin):-
     distance(P1, P2, D),
     image_diagonal(Dia),
     D/Dia =< Tmax,
     D/Dia > Tmin.
+
 % same line segment
 same_seg([], []).
 same_seg([P1, P2], [P1, P2]).
@@ -573,13 +621,12 @@ same_seg_set([S | Ss], L):-
     !.
 
 seg_in_set(_, [], _):-
-    fail.
+    fail, !.
 seg_in_set(Seg, [S | Ss], D):-
     (same_seg(Seg, S) ->
-	 D = S;
-     seg_in_set(Seg, Ss, D)
-    ),
-    !.
+	 (D = S, !);
+     (seg_in_set(Seg, Ss, D), !)
+    ).
 
 % randomly sampling a point on canvas edge
 random_point_on_canvas_edge([X, Y]):-
@@ -593,9 +640,12 @@ random_point_on_canvas_edge([X, Y]):-
 	   (Y is 0, W1 is W - 1, random_between(0, W1, X), !);
        (L =:= 3 -> 
 	    (Y is H - 1, W1 is W - 1, random_between(0, W1, X), !);
-	fail
-       )
-      )
+	(fail, !),
+	!
+       ),
+       !
+      ),
+      !
      )
     ).
 
@@ -605,13 +655,11 @@ points_rect([Point | Points], P_min, P_max, Temp_min, Temp_max):-
     Point = [X, Y],
     Temp_min = [X_min, Y_min],
     Temp_max = [X_max, Y_max],
-    (X < X_min -> New_X_min is X; New_X_min is X_min),
-    (Y < Y_min -> New_Y_min is Y; New_Y_min is Y_min),
-    (X > X_max -> New_X_max is X; New_X_max is X_max),
-    (Y > Y_max -> New_Y_max is Y; New_Y_max is Y_max),
+    (X < X_min -> (New_X_min is X, !); (New_X_min is X_min, !)),
+    (Y < Y_min -> (New_Y_min is Y, !); (New_Y_min is Y_min, !)),
+    (X > X_max -> (New_X_max is X, !); (New_X_max is X_max, !)),
+    (Y > Y_max -> (New_Y_max is Y, !); (New_Y_max is Y_max, !)),
     points_rect(Points, P_min, P_max, [New_X_min, New_Y_min], [New_X_max, New_Y_max]).
-
-
 
 poly_rect(Poly, P_min, P_max):-
     edges_ends(Poly, Points),
@@ -633,16 +681,16 @@ point_on_polygon_edges(_, []):-
     fail.
 point_on_polygon_edges(P, [Edge | Edges]):-
     point_on_line_seg_thresh(P, Edge, 0.001) ->
-	true;
-    point_on_polygon_edges(P, Edges).    
+	(true, !);
+    (point_on_polygon_edges(P, Edges), !).
 
 % whether a line segment crosses one of point in list
 line_seg_cross_points(_, []):-
-    fail.
+    fail, !.
 line_seg_cross_points(Seg, [Point | Points]):-
     point_on_line_seg_thresh(Point, Seg, 0.001) ->
-	true;
-    line_seg_cross_points(Seg, Points).
+	(true, !);
+    (line_seg_cross_points(Seg, Points), !).
 
 % whether a line segment crosses vertices of given polygon
 line_seg_cross_vertices_of_polygon(Seg, Poly):-
@@ -654,9 +702,10 @@ ray_casting(_, [], N, N).
 ray_casting(Seg, [Edge | Edges], N, Temp):-
     intersected_seg(Seg, Edge) ->
 	(T2 is Temp + 1,
-	 ray_casting(Seg, Edges, N, T2)
+	 ray_casting(Seg, Edges, N, T2),
+	 !
 	);
-    ray_casting(Seg, Edges, N, Temp).
+    (ray_casting(Seg, Edges, N, Temp), !).
 
 % checks whether a point is inside of a polygon by ray casting
 point_in_polygon(P, Poly):-
@@ -668,14 +717,16 @@ point_in_polygon(P, Poly):-
       random_point_on_canvas_edge(R), % random point and random ray
       % display_line([P, R], b),
       % writeln(R),
-      (line_seg_cross_vertices_of_polygon([P, R], Poly) -> % if ray cross vertex
-							    point_in_polygon(P, Poly); %  resample a ray
-       true
+      % if ray cross vertex
+      (line_seg_cross_vertices_of_polygon([P, R], Poly) -> 
+	   (point_in_polygon(P, Poly), !); %  resample a ray
+       (true, !)
       ),
       ray_casting([P, R], Poly, N, 0),
       odd(N),
       !
-     )
+     ),
+     !
     ).
 
 % linear regression
