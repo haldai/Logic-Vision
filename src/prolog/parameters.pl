@@ -3,7 +3,7 @@ edge_point_thresh(5).
 edge_point_relax(4).
 % threshhold of edge point proportion
 edge_points_proportion_threshold(1.0).
-edge_points_proportion_relax(0.0).
+edge_points_proportion_relax(0.4).
 % edge shrink size
 edge_shrink_thresh(0.3).
 % thresholds for same_line parameters difference

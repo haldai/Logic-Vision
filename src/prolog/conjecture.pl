@@ -1143,7 +1143,14 @@ readjust_intersected_edges(Edge, [I | Intscts], Other_edges, Conn_points, Return
      (append(Points, All_intsct_pts, All_intsct_pts_1),
       append(E, All_intsct_pts_1, All_intsct_pts_2),
       list_to_set(All_intsct_pts_2, All_intsct_pts_3),
-      search_for_longest_edge_line_seg(All_intsct_pts_3, New_edge),
+      search_for_longest_edge_line_seg(All_intsct_pts_3, New_edge_),
+      (New_edge_ == [] ->
+	   (get_left_right_most_points_in_list(All_intsct_pts, LL, RR),
+	    New_edge = [LL, RR], 
+	    !
+	   );
+       (New_edge = New_edge_, !)
+      ),
       intersection(E, Conn_points, Conn_it),
       list_delete(Conn_it, New_edge, Changed_conn),
       (not(Changed_conn == []) ->
