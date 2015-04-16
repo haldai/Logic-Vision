@@ -1,6 +1,6 @@
 % thresholds for edge_point gradient
 edge_point_thresh(6).
-edge_point_relax(5).
+edge_point_relax(4).
 % threshhold of edge point proportion
 edge_points_proportion_threshold(1.0).
 edge_points_proportion_relax(0.1).
@@ -13,7 +13,7 @@ on_seg_thresh(0.01).
 % threshold for edge subsumption
 edge_subsume_thresh(0.05).
 % point near threshold
-point_near_thresh(0.02).
+point_near_thresh(0.018).
 % edge near threshold
 point_near_thresh_ex(0.03).
 % combo minimum dist threshold

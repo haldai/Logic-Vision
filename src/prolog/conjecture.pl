@@ -450,7 +450,7 @@ sample_edges_components(_, [], Conn_comp_list, Temp_comp_list, _, N):-
     Conn_comp_list = Temp_comp_list,
     write("turn "),
     writeln(N),
-    writeln("finished!"),
+%    writeln("finished!"),
 %    writeln("====Points===="),
 %    print_list(Point_list),
 %    writeln("====Combs===="),
@@ -465,15 +465,15 @@ sample_edges_components(_, [], Conn_comp_list, Temp_comp_list, _, N):-
 sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
     write("turn "),
     writeln(N),
-%    writeln("====Points===="),
-%    print_list(Point_list),
-%    writeln("====Combs===="),
-%    print_list(Ongoing_combs),
-%    writeln("====Comps===="),
-%    print_list(Temp_comp_list),
-%    writeln("====Sampled lines===="),
-%    print_list(Sampled_lines),
-%    writeln("========"),
+    writeln("====Points===="),
+    print_list(Point_list),
+    writeln("====Combs===="),
+    print_list(Ongoing_combs),
+    writeln("====Comps===="),
+    print_list(Temp_comp_list),
+    writeln("====Sampled lines===="),
+    print_list(Sampled_lines),
+    writeln("========"),
     sample_edge_limit(T),
     N < T,
     N2 is N + 1,
@@ -854,25 +854,31 @@ time_point_as_end_of_edges(P, [E | Es], N, T):-
 merge_edge_with_all_edges(Edge, [], [Edge]).
 merge_edge_with_all_edges(Edge, Other_edges_, Return):-
     delete(Other_edges_, Edge, Other_edges),
-    get_all_intersections(Edge, Other_edges, All_intscts, []),
-    intersection_all_edges(All_intscts, All_intsct_edges, []),
-    list_delete(Other_edges, All_intsct_edges, Un_intsct_edges),
-    %append([Edge], Other_edges, All_edges),
-    get_connect_points(All_intsct_edges, Conn_points),
-    readjust_intersected_edges(Edge, All_intscts, Other_edges, Conn_points, Adjd_edges, Unchanged, Changed_conn_pair, [], [], []),
-%    intersection(All_intsct_edges, Adjd_edges, Adjd_unintsct_edges),
-    change_end_to_end_pairs(Adjd_edges, Changed_conn_pair, Adjd_edges_x),
-    change_end_to_end_pairs(Unchanged, Changed_conn_pair, Unchanged_x),
-    change_end_to_end_pairs(Un_intsct_edges, Changed_conn_pair, Un_intsct_edges_x),
-    readjust_new_edge(Edge, Adjd_edges_x, New_edge, New_IE, Old_IE),
-    list_delete(Adjd_edges_x, Old_IE, Adjd_edges_1),
-    append(Adjd_edges_1, New_IE, Adjd_edges_2),
-    append(Adjd_edges_2, Un_intsct_edges_x, Adjusted_edges_),
-    append(Adjusted_edges_, Unchanged_x, Adjusted_edges),
+    (Other_edges == [] ->
+	 (Return = [Edge],
+	  !
+	 );
+     (get_all_intersections(Edge, Other_edges, All_intscts, []),
+      intersection_all_edges(All_intscts, All_intsct_edges, []),
+      list_delete(Other_edges, All_intsct_edges, Un_intsct_edges),
+      %append([Edge], Other_edges, All_edges),
+      get_connect_points(All_intsct_edges, Conn_points),
+      readjust_intersected_edges(Edge, All_intscts, Other_edges, Conn_points, Adjd_edges, Unchanged, Changed_conn_pair, [], [], []),
+      %    intersection(All_intsct_edges, Adjd_edges, Adjd_unintsct_edges),
+      change_end_to_end_pairs(Adjd_edges, Changed_conn_pair, Adjd_edges_x),
+      change_end_to_end_pairs(Unchanged, Changed_conn_pair, Unchanged_x),
+      change_end_to_end_pairs(Un_intsct_edges, Changed_conn_pair, Un_intsct_edges_x),
+      readjust_new_edge(Edge, Adjd_edges_x, New_edge, New_IE, Old_IE),
+      list_delete(Adjd_edges_x, Old_IE, Adjd_edges_1),
+      append(Adjd_edges_1, New_IE, Adjd_edges_2),
+      append(Adjd_edges_2, Un_intsct_edges_x, Adjusted_edges_),
+      append(Adjusted_edges_, Unchanged_x, Adjusted_edges),
 
-    append([New_edge], Adjusted_edges, Merged),
-    filter_edges(Merged, Merged, Return, []),
-    !.
+      append([New_edge], Adjusted_edges, Merged),
+      filter_edges(Merged, Merged, Return, []),
+      !
+     )
+    ).
 
 filter_edges([], _, Return, Return).
 filter_edges([E | Es], All, Return, Temp):-
