@@ -231,7 +231,7 @@ point_not_on_edges(_, []).
 point_not_on_edges(Point, Edge_list):-
     Point = [X, Y| _],
     Edge_list = [Head | Tail],
-    edge_near_thresh(T),
+    point_near_thresh_ex(T),
     (point_on_line_seg_thresh([X, Y], Head, T) ->
 	 (fail, !);
      point_not_on_edges([X, Y], Tail),
@@ -340,8 +340,14 @@ get_points_on_edge([Head | Tail], Edge, On_edge, Rest, Temp_on_edge, Temp_rest):
      !
     ).
 
-get_points_on_edge(Point_list, Edge, On_edge, Rest):-
-    get_points_on_edge(Point_list, Edge, On_edge, Rest, [], []).
+get_points_on_edge(Ps, Edge, On_edge, Rest):-
+    poly_rect([Edge], P_min, P_max),
+    point_near_thresh(T),
+    image_diagonal(Dia),
+    Soft is truncate(T*Dia),
+    screening_points_of_rect(Ps, [P_min, P_max], Soft, Ps_),
+    list_delete(Ps, Ps_, Rest_),
+    get_points_on_edge(Ps_, Edge, On_edge, Rest, [], Rest_).
 
 get_points_on_edges(_, [], O, R, O, R).
 get_points_on_edges(Point_list, [E | Es], On_edge, Rest, Temp_on, Temp_re):-
@@ -459,15 +465,15 @@ sample_edges_components(_, [], Conn_comp_list, Temp_comp_list, _, N):-
 sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
     write("turn "),
     writeln(N),
-    writeln("====Points===="),
-    print_list(Point_list),
-    writeln("====Combs===="),
-    print_list(Ongoing_combs),
-    writeln("====Comps===="),
-    print_list(Temp_comp_list),
-    writeln("====Sampled lines===="),
-    print_list(Sampled_lines),
-    writeln("========"),
+%    writeln("====Points===="),
+%    print_list(Point_list),
+%    writeln("====Combs===="),
+%    print_list(Ongoing_combs),
+%    writeln("====Comps===="),
+%    print_list(Temp_comp_list),
+%    writeln("====Sampled lines===="),
+%    print_list(Sampled_lines),
+%    writeln("========"),
     sample_edge_limit(T),
     N < T,
     N2 is N + 1,
@@ -520,7 +526,8 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
 	 (build_edge(X1, Y1, X2, Y2, Edge_),
 	  Edge_ = [P1_, P2_],
 	  (not(P1_ = P2_; point_near(P1_, P2_)) ->
-	       (reg_grow_edge(Edge_, Point_list, Edge, 0),
+	       (%reg_grow_edge(Edge_, Point_list, Edge, 0),
+		Edge = Edge_,
 		display_line(Edge, r),
 		add_edge(Edge, Temp_comp_list, Temp_comp_list_1, New_edge, [], []),
 		(not(New_edge == []) ->
@@ -551,7 +558,7 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
      )
     ).
 
-reg_grow_edge(E, _, E, 10).
+reg_grow_edge(E, _, E, 1).
 reg_grow_edge(Edge, Point_list, New_edge, N):-
     N1 is N + 1,
     get_points_on_edge(Point_list, Edge, On_edge_point, _),
@@ -597,9 +604,8 @@ make_new_combs(Comp_list, Comp_list_old, PL_old, Combs_old, Sampled_lines, PL_ne
     edges_ends(Edges_new, PL_end_new),
     edges_ends(Edges_old, PL_end_old),
     list_delete(PL_end_new, PL_end_old, PL_end_added), % added ends
-    list_delete(PL_old, PL_end_new, PL_free), % free points (not on edges)
-    list_delete(PL_end_old, PL_end_new, PL_end_removed), % removed ends
     intersection(PL_end_old, PL_end_new, PL_end_remains), % remained ends
+    list_delete(PL_end_old, PL_end_remains, PL_end_removed), % removed ends
     get_points_on_edges(PL_old, Edges_added, PL_free_removed, PL_free_remains), % remove free points
     append(PL_end_removed, PL_free_removed, PL_removed),
     append(PL_free_remains, PL_end_new, PL_new),
@@ -790,8 +796,8 @@ process_point_edge_subsumption(Edge, [V | Vs], RM_p, RM_e, Temp_p, Temp_e):-
     ).
 
 % edge subsume edge
-process_edge_edge_subsumption(_, [], Subbed, Unsubbed, Temp_s, Temp_u):-
-    Unsubbed = Temp_u,
+process_edge_edge_subsumption(Edge, [], Subbed, Unsubbed, Temp_s, Temp_u):-
+    append([Edge], Temp_u, Unsubbed),
     Subbed = Temp_s,
     !.
 process_edge_edge_subsumption(Edge, [E | Es], Subbed, Unsubbed, Temp_s, Temp_u):-
@@ -846,7 +852,8 @@ time_point_as_end_of_edges(P, [E | Es], N, T):-
     time_point_as_end_of_edges(P, Es, N, T).
 
 merge_edge_with_all_edges(Edge, [], [Edge]).
-merge_edge_with_all_edges(Edge, Other_edges, Return):-
+merge_edge_with_all_edges(Edge, Other_edges_, Return):-
+    delete(Other_edges_, Edge, Other_edges),
     get_all_intersections(Edge, Other_edges, All_intscts, []),
     intersection_all_edges(All_intscts, All_intsct_edges, []),
     list_delete(Other_edges, All_intsct_edges, Un_intsct_edges),
@@ -1260,7 +1267,9 @@ change_end_to_end_pairs(Edges, [EP | EPs], Return):-
 
 change_end_to_end(Edges, End1, End2, Return):-
     findall(EE, (member(EE, Edges), member(End1, EE)), Has_end1),
-    change_end(Has_end1, End1, End2, Return, []).
+    list_delete(Edges, Has_end1, Rest),
+    change_end(Has_end1, End1, End2, Return_, []),
+    append(Return_, Rest, Return).
 
 change_end([], _, _, Return, Temp):-
     Return = Temp,
@@ -1476,10 +1485,4 @@ split_components(Edge_list, Comp_list):-
     findall(Num, between(1, Len, Num), Idx_list),
     generate_connected_edge_idx(Edge_list, Idx_list, Edge_list, Conn, []),
     split_components(Edge_list, Idx_list, Conn, Comp_list, []).
-
-% TODO::post-process
-post_process([], Return, Temp):-
-    Return = Temp, !.
-post_process([C | Cs], Return, Temp):-
-    fail.
 

@@ -513,17 +513,16 @@ intersected_or_near(E1, E2):-
     % intersected
     (intersected_seg(E1, E2), !);
     % intersected point on edge
-    (E1 = [P1, P2],
-     E2 = [P3, P4],
+    (%E1 = [P1, P2],
+     %E2 = [P3, P4],
      intersected_seg_ex(E1, E2, Points),
      middle_element(Points, IP),
-     ((((point_near_ex(P1, IP), !);
-      (point_near_ex(P2, IP))),
-      ((point_near_ex(P3, IP), !);
-      (point_near_ex(P4, IP))), !);
+%     ((((point_near_ex(P1, IP), !);
+%      (point_near_ex(P2, IP))),
+%      ((point_near_ex(P3, IP), !);
+%      (point_near_ex(P4, IP))), !);
       (point_on_line_seg(IP, E1),
-       point_on_line_seg(IP, E2))
-     ),
+       point_on_line_seg(IP, E2)),
      !
     );
     ((E1 = [P1, P2],
@@ -587,7 +586,7 @@ point_near(P1, P2):-
 point_near_ex(P1, P2):-
     distance(P1, P2, D),
     image_diagonal(Dia),
-    edge_near_thresh(T),
+    point_near_thresh_ex(T),
     D/Dia =< T.
 
 % combo distance limit
