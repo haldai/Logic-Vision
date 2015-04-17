@@ -53,7 +53,7 @@ connect_and_exam_edges([Comb | Combs], Return, Temp):-
 	  connect_and_exam_edges(Combs, Return, Temp_1),
 	  !
 	 );
-     (((point_near_ex(P1, P2), edge_line_seg_proportion_grad(P1, P2, 1.0, 0.6))->
+     (((point_near_thresh(P1, P2, 0.05), edge_line_seg_proportion_grad(P1, P2, 1.0, 0.6))->
 	   (New_edge = Comb,
 	    append(Temp, [New_edge], Temp_1),
 	    connect_and_exam_edges(Combs, Return, Temp_1),

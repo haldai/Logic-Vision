@@ -583,6 +583,11 @@ point_near(P1, P2):-
     point_near_thresh(T),
     D/Dia =< T.
 
+point_near_thresh(P1, P2, T):-
+    distance(P1, P2, D),
+    image_diagonal(Dia),
+    D/Dia =< T.
+
 point_near_ex(P1, P2):-
     distance(P1, P2, D),
     image_diagonal(Dia),

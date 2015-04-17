@@ -450,7 +450,7 @@ sample_edges_components(_, [], Conn_comp_list, Temp_comp_list, _, N):-
     Conn_comp_list = Temp_comp_list,
     write("turn "),
     writeln(N),
-%    writeln("finished!"),
+    writeln("finished!"),
 %    writeln("====Points===="),
 %    print_list(Point_list),
 %    writeln("====Combs===="),
@@ -465,15 +465,15 @@ sample_edges_components(_, [], Conn_comp_list, Temp_comp_list, _, N):-
 sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N):-
     write("turn "),
     writeln(N),
-    writeln("====Points===="),
-    print_list(Point_list),
-    writeln("====Combs===="),
-    print_list(Ongoing_combs),
-    writeln("====Comps===="),
-    print_list(Temp_comp_list),
-    writeln("====Sampled lines===="),
-    print_list(Sampled_lines),
-    writeln("========"),
+%    writeln("====Points===="),
+%    print_list(Point_list),
+%    writeln("====Combs===="),
+%    print_list(Ongoing_combs),
+%    writeln("====Comps===="),
+%    print_list(Temp_comp_list),
+%    writeln("====Sampled lines===="),
+%    print_list(Sampled_lines),
+%    writeln("========"),
     sample_edge_limit(T),
     N < T,
     N2 is N + 1,
@@ -488,7 +488,8 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
       (line_existed([A, B, C], Sampled_lines) -> 
 	   (sample_edges_components(Point_list, Other_combs, Conn_comp_list, Temp_comp_list, Sampled_lines, N2), 
 	    !);
-       (append(Sampled_lines, [[A, B, C]], Sampled_lines_1),
+       (%append(Sampled_lines, [[A, B, C]], Sampled_lines_1),
+	Sampled_lines_1 = Sampled_lines,
 	display_point_list(Comb, y),
 	P1 = [X1, Y1],
 	P2 = [X2, Y2],
@@ -620,7 +621,8 @@ make_new_combs(Comp_list, Comp_list_old, PL_old, Combs_old, Sampled_lines, PL_ne
     % remove old combinations
     remove_points_combs(Combs_new_, PL_removed, Combs_3),
     list_delete(Combs_3, Edges_old, Combs_4),
-    list_delete(Combs_4, Edges_new, Combs_new),
+    list_delete(Combs_4, Edges_new, Combs_5),
+    list_to_set(Combs_5, Combs_new),
     !.
 
 %add_edge(Edge, [], Return, Temp, []):-
@@ -1135,8 +1137,11 @@ readjust_intersected_edges(Edge, [I | Intscts], Other_edges, Conn_points, Return
 		    edge_points_proportion_relax(RP),
 		    PT1 is (PT - RP),
 		    GT1 is (GT - RG),
+		    Edge = [E1, E2],
 		    Removed = [Removed_P | _],
-		    ((edge_line_seg_proportion_grad(Removed_P, IP, GT1, PT1)
+		    ((edge_line_seg_proportion_grad(Removed_P, IP, GT1, PT1),
+		      edge_line_seg_proportion_grad(E1, IP, GT1, PT1),
+		      edge_line_seg_proportion_grad(E2, IP, GT1, PT1)
 		     ) ->
 			 (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
 		     (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
@@ -1217,7 +1222,10 @@ readjust_intersected_edges(Edge, [I | Intscts], Other_edges, Conn_points, Return
 	      list_delete(New_edge, E, Added),
 	      Added = [IP | _],
 	      Removed = [Removed_P | _],
-	      ((edge_line_seg_proportion_grad(Removed_P, IP, GT1, PT1)
+	      Edge = [E1, E2],
+	      ((edge_line_seg_proportion_grad(Removed_P, IP, GT1, PT1),
+		edge_line_seg_proportion_grad(E1, IP, GT1, PT1),
+		edge_line_seg_proportion_grad(E2, IP, GT1, PT1)
 	       ) ->
 		   (append([New_edge], Temp, Temp_1), Temp_U_1 = Temp_U, !);
 	       (Temp_1 = Temp, append([E], Temp_U, Temp_U_1), !)
