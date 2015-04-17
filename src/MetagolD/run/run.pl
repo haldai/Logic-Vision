@@ -1,6 +1,7 @@
 :-['../gen_metagol.pl'].
 :-['../polygons/bk.pl','../polygons/trainExs.pl'].  %prim2_ep,
 
+% For swi-prolog
 :- expects_dialect(sicstus).
 :-use_module(library(timeout)).
 :-use_module(library(apply_macros)).
