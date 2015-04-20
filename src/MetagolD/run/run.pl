@@ -1,7 +1,6 @@
 :-['../gen_metagol.pl'].
 :-['../polygons/bk.pl','../polygons/trainExs.pl'].  %prim2_ep,
 
-% For swi-prolog
 :- expects_dialect(sicstus).
 :-use_module(library(timeout)).
 :-use_module(library(apply_macros)).
@@ -188,7 +187,7 @@ timelimit(600000). % 1min
 gogogo:-
     asserta(clausebound(10)),
     %timelimit(TimeLimit),
-    Eps=[shape],
+    Eps=[triangle],
     %statistics(cputime,[Total1,Previous]),%write('----------start'),write(I),nl,
     %time_out(learn_seq(Eps,Hyp),TimeLimit,Result),
     learn_seq(Eps,Hyp),

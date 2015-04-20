@@ -1,13 +1,13 @@
-episode(shape,
+episode(triangle,
 	 [ % pos
-	     [shape, pol_3, 3],     
-	     [shape, pol_4, 3],
-	     [shape, pol_5, 3],
-	     [shape, pol_2, 5],
-	     [shape, pol_6, 4],
-	     [shape, pol_10, 7],
-	     [shape, pol_11, 5]
+	     [triangle, pol_3],     
+	     [triangle, pol_4],
+	     [triangle, pol_5]
 	 ],
 	 [ % neg
+	     [triangle, pol_2],
+	     [triangle, pol_6],
+	     [triangle, pol_10],
+	     [triangle, pol_11]
 	 ]
 ).

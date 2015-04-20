@@ -10,7 +10,7 @@
 
 %metaruless([[precon,base,chain,inverse,property]]). %chain,
 %metaruless([[chain,inverse,tailrec]]). %base--inverse
-metaruless([[instance,chain]]). % ,inverse,tailrec
+metaruless([[property_chain]]). % ,inverse,tailrec
 %note:instance and property are proved by d_proved
 
 
@@ -65,13 +65,19 @@ monadics([]). % triangle/1
 %    polygon(X, L),
 %    list_length(L, Y).
 
-list_length(X, Y):-
-    X = [_|_] ->
-	(length(X, Y), !);
-    Y = -1.
-    
+list_length(X, N):-
+    X = [_|_],
+    length(X, N),
+    num_edges(N).
+
+
 %num_equals(X, Y):-
 %    num(X),
 %    num(Y),
 %    X =:= Y.
 
+num_edges(1). num_edges(2).
+num_edges(3). num_edges(4).
+num_edges(5). num_edges(6).
+num_edges(7). num_edges(8).
+num_edges(9). num_edges(10).

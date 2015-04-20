@@ -344,15 +344,17 @@ metarule1(chain,[P/2,Q/Qa,R/Ra|UV],([P,X,Y] :- [A-Post1,B-Post2]),Pre,Prog) :-
     obj_gt(ObjGT1),obj_gt(ObjGT2),
     Post1 =.. [ObjGT1,X,Z,Prog],
     Post2 =.. [ObjGT2,Z,Y,Prog].
-metarule1(monochain,[P/1,Q/Qa,R/Ra|UV],([P,X] :- [A-Post1,B-Post2]),Pre,Prog) :-
-    A=[Q,X,Z|U], B=[R,Z,Y|V],
-    arity(A,Qa), arity(B,Ra), append(U,V,UV),
-    Pre=(pred_above(P/1,Q/Qa,Prog), pred_above(P/1,R/Ra,Prog)),
-    obj_gt(ObjGT1),obj_gt(ObjGT2),
-    Post1 =.. [ObjGT1,X,Z,Prog],
-    Post2 =.. [ObjGT2,Z,Y,Prog].
 
-%arity([_,_,_,_],3). 
+% my meta rules
+metarule1(property_base,[P/1,Q/Qa|U],([P,X] :- [A-true]),Pre,Prog) :-   
+    A=[Q,X|U], arity(A,Qa),
+    Pre=pred_above(P/1,Q/Qa,Prog).
+metarule1(property_chain,[P/1,Q/Qa,R/Ra|UV],([P,X] :- [A-true, B-true]),Pre,Prog) :-   
+    A=[Q,X,Y|U], B=[R,Y|V],
+    arity(A,Qa), arity(B,Ra), append(U,V,UV),
+    Pre=(pred_above(P/1,Q/Qa,Prog), pred_above(P/1,R/Ra,Prog)).
+
+arity([_,_,_,_],3). 
 arity([_,_,_],2). arity([_,_],1).
 
 init_preds(P) :- primitives(P).
