@@ -1,0 +1,23 @@
+label(182, 73).
+label(105, 191).
+label(238, 289).
+label(374, 354).
+label(526, 159).
+label(435, 247).
+label(512, 54).
+label(94, 318).
+label(256, 186).
+label(361, 101).
+label(531, 309).
+
+triangle(182, 73).
+triangle(105, 191).
+triangle(238, 289).
+triangle(374, 354).
+triangle(526, 159).
+quadrangle(435, 247).
+pentagon(512, 54).
+pentagon(94, 318).
+pentagon(256, 186).
+concave(361, 101).
+multiangle(531, 309).

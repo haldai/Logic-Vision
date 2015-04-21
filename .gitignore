@@ -41,5 +41,4 @@ img_client
 *.JPG
 *.jpeg
 *.JPEG
-triangles*.pl
 test*.pl

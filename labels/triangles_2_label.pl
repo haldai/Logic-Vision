@@ -1,0 +1,19 @@
+label(251, 60).
+label(209, 154).
+label(298, 216).
+label(119, 288).
+label(528, 160).
+label(327, 319).
+label(515, 288).
+label(398, 151).
+label(118, 75).
+
+triangle(251, 60).
+triangle(209, 154).
+triangle(298, 216).
+triangle(119, 288).
+quadrangle(528, 160).
+quadrangle(327, 319).
+pentagon(515, 288).
+sexangle(398, 151).
+concave(118, 75).

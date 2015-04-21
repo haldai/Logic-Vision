@@ -1,0 +1,23 @@
+label(74, 88).
+label(280, 46).
+label(248, 196).
+label(492, 87).
+label(414, 399).
+label(111, 267).
+label(370, 129).
+label(120, 156).
+label(74, 320).
+label(473, 239).
+label(586, 181).
+
+triangle(74, 88).
+triangle(280, 46).
+triangle(248, 196).
+triangle(492, 87).
+triangle(414, 399).
+quadrangle(111, 267).
+quadrangle(370, 129).
+concave(120, 156).
+concave(74, 320).
+concave(473, 239).
+concave(586, 181).
