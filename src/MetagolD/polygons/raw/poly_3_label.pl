@@ -1,0 +1,11 @@
+triangle(pol_1).
+not(triangle(pol_2)).
+not(triangle(pol_3)).
+triangle(pol_4).
+not(triangle(pol_5)).
+not(triangle(pol_6)).
+triangle(pol_7).
+not(triangle(pol_8)).
+not(triangle(pol_9)).
+not(triangle(pol_10)).
+triangle(pol_11).

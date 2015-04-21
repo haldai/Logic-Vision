@@ -83,7 +83,7 @@ const int confirm_quant(void) {
  * Start an image processing server, load image and unifies PID 
  * with the server.
  */
-PREDICATE(load_img, 2) {
+PREDICATE(img_load, 2) {
     char* img_path = (char*) A1;
     pid_t server_pid;
     server_pid = fork();
@@ -168,7 +168,7 @@ PREDICATE(load_img, 2) {
     }
     }
 
-    sleep(1);
+    //sleep(1);
     return TRUE;
 }
 
@@ -223,6 +223,10 @@ PREDICATE(img_release, 0) {
 	    printf("[IMG] Image released.\n");
 	    free(msg_back);
 	    msg_back = NULL;
+	    PlCall("retractall(img_size(_, _))");
+	    PlCall("retractall(color_diff(_, _, _))");
+	    PlCall("retractall(color_L_diff(_, _, _))");
+	    PlCall("retractall(color_ab_diff(_, _, _))");
 	    return TRUE;
 	} else {
 	    printf("[CLIENT] Unexpected message from image server.\n");

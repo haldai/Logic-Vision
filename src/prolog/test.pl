@@ -1,5 +1,4 @@
 % initialization & exit
-:- dynamic point/3.
 :-
     set_prolog_stack(global, limit(2*10**9)),
     set_prolog_stack(local, limit(2*10**9)),
@@ -9,9 +8,12 @@
     set_prolog_stack(trail, spare(2048)),
     set_prolog_stack(global, min_free(16384)),
     set_prolog_stack(local, min_free(4096)),
-    set_prolog_stack(trail, min_free(4096)).
+    set_prolog_stack(trail, min_free(4096)),
 
-load_all_libs:-
+    % load cv lib
+    load_foreign_library(foreign('img_process.so')),
+
+%load_all_libs:-
     % load primitives
     ['parameters.pl'],
     ['primitive.pl'],
@@ -21,15 +23,15 @@ load_all_libs:-
     ['conjecture.pl'],
     ['io.pl'],
     ['post_process.pl'],
+    ['labeler.pl'].
     
     % debug test files
-    ['test_line.pl'].
 
 init:-
-    load_all_libs,
+%    load_all_libs,
     % start image processor
-    load_foreign_library(foreign('img_process.so')),
-    load_img('../../triangles_4.jpg', _),
+
+    img_load('../../triangles_4.jpg', _),
     img_quantize(2).
 
 halt_prog:-
@@ -51,3 +53,10 @@ test_go:-
     open('../../triangles_4_R.pl', write, Out),
     write_polygons(Cs_1, Out, 1),
     close(Out).
+
+test_label(I):-
+    format(atom(Img_file), '../../triangles_~d.jpg', [I]),
+    format(atom(Poly_file), '../../results/triangles_~d_R.pl', [I]),
+    format(atom(Label_file), '../../labels/triangles_~d_label.pl', [I]),
+    format(atom(Out_file), '../MetagolD/polygons/raw/poly_~d_label.pl', [I]),
+    label_from_file(Img_file, Poly_file, Label_file, Out_file).
