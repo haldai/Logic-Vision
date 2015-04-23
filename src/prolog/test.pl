@@ -1,7 +1,7 @@
 % initialization & exit
-debug_(1).
-
 :- dynamic(point/3, triangle/2, quadrangle/2, pentagon/2, hexagon/2, right_angle/2, regular/2, triangle/1, quadrangle/1, pentagon/1, hexagon/1, right_angle/1, regular/1).
+
+debug_(0).
 
 :-
     set_prolog_stack(global, limit(2*10**9)),
@@ -14,11 +14,9 @@ debug_(1).
     set_prolog_stack(local, min_free(4096)),
     set_prolog_stack(trail, min_free(4096)),
 
-
     % load cv lib
     load_foreign_library(foreign('img_process.so')),
 
-%load_all_libs:-
     % load primitives
     ['parameters.pl'],
     ['primitive.pl'],
@@ -30,15 +28,6 @@ debug_(1).
     ['post_process.pl'],
     ['labeler.pl'],
     ['gen_episodes'].
-    
-
-
-init:-
-%    load_all_libs,
-    % start image processor
-
-    img_load('../../triangles_4.jpg', _),
-    img_quantize(2).
 
 halt_prog:-
     img_release,

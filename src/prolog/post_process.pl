@@ -78,7 +78,11 @@ connect_and_exam_edges([Comb | Combs], Return, Temp):-
 	   ),
 	   !
 	  );
-      (((point_near_thresh(P1, P2, 0.05), edge_line_seg_proportion_grad(P1, P2, 1.0, 0.6))->
+      % if not near but isolated points, connect them
+      (((isolated_point(P1, Temp), 
+	 isolated_point(P2, Temp), 
+	 point_near_thresh(P1, P2, 0.05), 
+	 edge_line_seg_proportion_grad(P1, P2, 1.0, 0.6))->
 	    (New_edge = Comb,
 	     process_edge_edge_subsumption(New_edge, Temp, _, Unsubbed, [], []),
 	     Temp_1 = Unsubbed,
@@ -102,3 +106,57 @@ edges_not_in_list([E | Es], List, Return, Temp):-
      edges_not_in_list(Es, List, Return, Temp_1),
      !
     ).
+
+ignore_edges([], C, _, Final_C):-
+    Final_C = C, !.
+ignore_edges([E | Es], C, T, Final_C):-
+    E = [P1, P2],
+    findall(EE, (member(EE, C), (member(P1, EE); member(P2, EE))), Conn_),
+    list_to_set(Conn_, Conn__),
+    delete(Conn__, E, Conn),
+    (Conn = [E1, E2] ->
+	 (true, !);
+     (ignore_edges(Es, C, T, Final_C), !)
+    ),
+    seg_length(E1, L1),
+    seg_length(E2, L2),
+    seg_length(E, L),
+    Dev is (L/L1 + L/L2)/2,
+    (Dev < T ->
+	 (line_parameters(E1, A1, B1, C1),
+	  line_parameters(E2, A2, B2, C2),
+	  intersected_lines([A1, B1, C1], [A2, B2, C2], Points_1),
+	  middle_element(Points_1, IP),
+	  list_delete(E1, E, E1_),
+	  list_delete(E2, E, E2_),
+	  append(E1_, [IP], E1_R),
+	  append(E2_, [IP], E2_R),
+	  list_delete(C, [E1, E2, E], C_),
+	  append(C_, [E1_R, E2_R], C_1),
+	  ignore_edges(C_1, C_1, T, Final_C),
+	  !
+	 );
+     (ignore_edges(Es, C, T, Final_C), !)
+    ).
+
+isolated_edge(E, C):-
+    E = [P1, P2],
+    findall(EE, (member(EE, C), member(P1, EE)), E1s),
+    findall(EE, (member(EE, C), member(P2, EE)), E2s),
+    length(E1s, L1),
+    length(E2s, L2),
+    (L1 =:= 1; L2 =:= 1),
+    !.
+
+isolated_point(P, C):-
+    findall(EE, (member(EE, C), member(P, EE)), Es),
+    length(Es, L),
+    L == 1,
+    !.
+
+
+% test  primitives
+connect_edges(X, Y, T):-
+    %thresh_1(T),
+    edges_ends(X, Vs),
+    replace_connected_edges(Vs, X, T, Y).

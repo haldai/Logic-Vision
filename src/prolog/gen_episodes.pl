@@ -1,5 +1,3 @@
-:- discontiguous not/1.
-
 print_episodes(Names, W, I):-
     format(atom(Out_file), '../MetagolD/polygons/raw/~w_~d_episodes.pl', [W, I]),
     tell(Out_file),
@@ -46,7 +44,7 @@ print_episodes(Name, [Obj | []]):-
     write(Obj),
     writeln(']'),
     !.
-print_episodes(Name, []):-
+print_episodes(_, []):-
     writeln(''),
     !.
 print_episodes(Name, [Obj | Objs]):-

@@ -477,7 +477,6 @@ sample_edges_components(Point_list, Ongoing_combs, Conn_comp_list, Temp_comp_lis
     sample_edge_limit(T),
     N < T,
     N2 is N + 1,
-    not(Ongoing_combs == []),
     Ongoing_combs = [Comb | Other_combs],
     Comb = [P1, P2],
 %    line_parameters(Comb, A, B, C),

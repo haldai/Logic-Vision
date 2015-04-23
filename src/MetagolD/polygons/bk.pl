@@ -65,7 +65,7 @@ suffix(L,X) :-
     [P_util].
 
 % predicates for abduction
-dyadics([polygon/2, list_length/2, connect_edge/3]).
+dyadics([polygon/2, list_length/2, connect_edges/3]).
 monadics([]). % triangle/1
 
 % other primitives
@@ -79,10 +79,14 @@ list_length(X, N):-
     length(X, N),
     integer_(N).
 
-connect_edge(X, Y, T):-
-    thresh_(T),
+connect_edges(X, Y, T):-
+    thresh_1(T),
     edges_ends(X, Vs),
     replace_connected_edges(Vs, X, T, Y).
+
+ignore_edge(X, Y, T):-
+    thresh_2(T),
+    ignore_edges(X, X, T, Y).
 
 integer_(1). integer_(2).
 integer_(3). integer_(4).
@@ -90,13 +94,25 @@ integer_(5). integer_(6).
 integer_(7). integer_(8).
 integer_(9). integer_(10).
 
-thresh_(0.002). thresh_(0.004).
-thresh_(0.006). thresh_(0.008).
-thresh_(0.010). thresh_(0.012).
-thresh_(0.014). thresh_(0.016).
-thresh_(0.018). thresh_(0.020).
-thresh_(0.022). thresh_(0.024).
-thresh_(0.026). thresh_(0.028).
-thresh_(0.030). thresh_(0.032).
-thresh_(0.034). thresh_(0.036).
-thresh_(0.038). thresh_(0.040).
+thresh_1(0.002). thresh_1(0.004).
+thresh_1(0.006). thresh_1(0.008).
+thresh_1(0.010). thresh_1(0.012).
+%thresh_1(0.014). thresh_1(0.016).
+%thresh_1(0.018). thresh_1(0.020).
+%thresh_1(0.022). thresh_1(0.024).
+%thresh_1(0.026). thresh_1(0.028).
+%thresh_1(0.030). thresh_1(0.032).
+%thresh_1(0.034). thresh_1(0.036).
+%thresh_1(0.038). thresh_1(0.040).
+
+thresh_2(0.10). thresh_2(0.12).
+thresh_2(0.14). thresh_2(0.16).
+thresh_2(0.18). thresh_2(0.20).
+thresh_2(0.22). thresh_2(0.24).
+thresh_2(0.26). thresh_2(0.28).
+thresh_2(0.30). thresh_2(0.32).
+thresh_2(0.34). thresh_2(0.36).
+thresh_2(0.38). thresh_2(0.40).
+thresh_2(0.40). thresh_2(0.42).
+thresh_2(0.44). thresh_2(0.46).
+thresh_2(0.48). thresh_2(0.50).
