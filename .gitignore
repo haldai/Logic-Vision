@@ -37,7 +37,7 @@ img_client
 *~
 
 # Test data
-*.jpg
+#*.jpg
 *.JPG
 *.jpeg
 *.JPEG
