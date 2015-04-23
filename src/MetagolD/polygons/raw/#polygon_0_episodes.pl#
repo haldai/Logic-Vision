@@ -1,0 +1,4 @@
+episode(triangle,
+	[pol_3, pol_4, pol_7],
+	[pol_1, pol_2, pol_5, pol_6, pol_8]
+       ).

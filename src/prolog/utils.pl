@@ -20,6 +20,20 @@ print_list(L):-
      writeln("]")
     ).
 
+print_list_noln(L):-
+    L == [] ->
+	(write(""), !);
+    (write("["),
+     L = [H | T],
+     write(H),
+     forall(member(X, T),
+	    (write(", "),
+	     write(X)
+	    )
+	   ),
+     write("]")
+    ).
+
 % list delete
 list_delete([], _, []).
 list_delete(List, [], List).
@@ -167,6 +181,11 @@ display_polygon_list(Polygon_list, C):-
       !
      )
     ).
+
+% display all polygons
+display_all_polygons(C):-
+    polygon(_, L),
+    display_line_list(L, C).
 
 % random point
 random_point(X, Y):-
@@ -465,7 +484,7 @@ continuous_intervals(Point_list, Interval_list):-
     continuous_intervals(Point_list, [], [], Interval_list).
 
 % get the middle point of a list
-middle_element([],[]).
+middle_element([], []).
 middle_element(List, Element):-
     length(List, Len),
     Idx is truncate(Len/2 + 0.5),

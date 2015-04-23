@@ -10,7 +10,7 @@
 
 %metaruless([[precon,base,chain,inverse,property]]). %chain,
 %metaruless([[chain,inverse,tailrec]]). %base--inverse
-metaruless([[property_chain]]). % ,inverse,tailrec
+metaruless([[property_chain, chain]]). % ,inverse,tailrec
 %note:instance and property are proved by d_proved
 
 
@@ -48,18 +48,27 @@ suffix(L,X) :-
 % Primitives
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% dyadics([write_dot,write_slash,make_uppercase,make_lowercase,copy1,skip1]).
-% monadics([uppercase,lowercase,input_space,digit]).
+% primitive dir
 
+:- 
+    P_dir = '../../prolog/',
+    % geometry primitives
+    concat(P_dir, 'primitive.pl', P_prim),
+    concat(P_dir, 'polygon.pl', P_poly),
+    concat(P_dir, 'sampler.pl', P_samp),
+    concat(P_dir, 'conjecture.pl', P_conj),
+    concat(P_dir, 'utils', P_util),
+    [P_prim],
+    [P_poly],
+    [P_samp],
+    [P_conj],
+    [P_util].
 
-
-% dyadics([athleteplaysforteam/2,teamhomestadium/2]). %athleteplayssport/2 -- from episode
-% monadics([]). %female/1,male/1
-
-dyadics([polygon/2, list_length/2]).
+% predicates for abduction
+dyadics([polygon/2, list_length/2, connect_edge/3]).
 monadics([]). % triangle/1
 
-:-['./facts/poly_1.pl'].
+% other primitives
 
 %num_edges(X, Y):-
 %    polygon(X, L),
@@ -68,16 +77,26 @@ monadics([]). % triangle/1
 list_length(X, N):-
     X = [_|_],
     length(X, N),
-    num_edges(N).
+    integer_(N).
 
+connect_edge(X, Y, T):-
+    thresh_(T),
+    edges_ends(X, Vs),
+    replace_connected_edges(Vs, X, T, Y).
 
-%num_equals(X, Y):-
-%    num(X),
-%    num(Y),
-%    X =:= Y.
+integer_(1). integer_(2).
+integer_(3). integer_(4).
+integer_(5). integer_(6).
+integer_(7). integer_(8).
+integer_(9). integer_(10).
 
-num_edges(1). num_edges(2).
-num_edges(3). num_edges(4).
-num_edges(5). num_edges(6).
-num_edges(7). num_edges(8).
-num_edges(9). num_edges(10).
+thresh_(0.002). thresh_(0.004).
+thresh_(0.006). thresh_(0.008).
+thresh_(0.010). thresh_(0.012).
+thresh_(0.014). thresh_(0.016).
+thresh_(0.018). thresh_(0.020).
+thresh_(0.022). thresh_(0.024).
+thresh_(0.026). thresh_(0.028).
+thresh_(0.030). thresh_(0.032).
+thresh_(0.034). thresh_(0.036).
+thresh_(0.038). thresh_(0.040).

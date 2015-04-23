@@ -9,11 +9,11 @@ edge_shrink_thresh(0.0).
 % thresholds for same_line parameters difference
 same_line_para_thresh(0.03).
 % threshold for "3 points on same line"
-on_seg_thresh(0.01).
+on_seg_thresh(0.015).
 % threshold for edge subsumption
 edge_subsume_thresh(0.05).
 % point near threshold
-point_near_thresh(0.02).
+point_near_thresh(0.018).
 % edge near threshold
 point_near_thresh_ex(0.03).
 % combo minimum dist threshold

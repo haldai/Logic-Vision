@@ -1,5 +1,5 @@
 :-['../gen_metagol.pl'].
-:-['../polygons/bk.pl','../polygons/trainExs.pl'].  %prim2_ep,
+:-['../polygons/bk.pl'].  %prim2_ep,
 
 :- expects_dialect(sicstus).
 :-use_module(library(timeout)).
@@ -184,10 +184,15 @@ scripts:-
 
 timelimit(600000). % 1min 
 
-gogogo:-
+gogogo(Eps, W, I):-
+    % load training examples
+    format(atom(TrainExs), '../polygons/raw/~w_~d_episodes.pl', [W, I]),
+    [TrainExs],
+    % load facts
+    format(atom(Fact_file), '../polygons/facts/~w_~d_R.pl', [W, I]),
+    [Fact_file],
     asserta(clausebound(10)),
     %timelimit(TimeLimit),
-    Eps=[triangle],
     %statistics(cputime,[Total1,Previous]),%write('----------start'),write(I),nl,
     %time_out(learn_seq(Eps,Hyp),TimeLimit,Result),
     learn_seq(Eps,Hyp),
