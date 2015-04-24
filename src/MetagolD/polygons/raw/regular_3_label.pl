@@ -1,10 +1,9 @@
-
 :- discontiguous regular/1.
 :- discontiguous not_regular/1.
-regular(pol_1).
-regular(pol_2).
-not_regular(pol_3).
-regular(pol_4).
-not_regular(pol_5).
-regular(pol_6).
-not_regular(pol_7).
+not_regular(pol_31).
+regular(pol_32).
+not_regular(pol_33).
+regular(pol_34).
+regular(pol_35).
+not_regular(pol_36).
+regular(pol_37).

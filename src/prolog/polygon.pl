@@ -41,13 +41,21 @@ edge_numbers(Polygon, N):-
 edge_numbers(Polygon, N):-
     length(Polygon, N).
 
-% triangle (vertex)
-triangle_chk_v(P1, P2, P3):-
-    polygon_chk_v([P1, P2, P3, P1]).
+% get all angles
+angles_list(X, Y):-
+    edges_ends(X, Vs),
+    all_vertex_angles_list(Vs, X, Y, []). % TODO
 
-triangle_chk_v_display(P1, P2, P3):-
-    display_refresh,
-    display_point(P1, r),
-    display_point(P2, r),
-    display_point(P3, r),
-    polygon_chk_v([P1, P2, P3, P1]).
+all_vertex_angles_list([], _, Return, Temp):-
+    Return = Temp, !.
+all_vertex_angles_list([V | Vs], Edges, Return, Temp):-
+    findall(E, (member(E, Edges), member(V, E)), Conn),
+    length(Conn, L),
+    L >= 2,
+    edges_ends(Conn, Ends),
+    delete(Ends, V, Other_ends),
+    Other_ends = [P1, P2 | _],
+    edge_angle(P1, V, P2, A),
+    Angle is A/pi,
+    append(Temp, [Angle], Temp_1),
+    all_vertex_angles_list(Vs, Edges, Return, Temp_1).

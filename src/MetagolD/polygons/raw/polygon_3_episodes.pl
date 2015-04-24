@@ -1,61 +1,45 @@
 episode(triangle,
 	[
-	 [triangle, pol_2],
-	 [triangle, pol_5]
+	 [triangle, pol_32],
+	 [triangle, pol_33]
 	],
 	[
-	 [triangle, pol_1],
-	 [triangle, pol_3],
-	 [triangle, pol_4],
-	 [triangle, pol_6],
-	 [triangle, pol_7],
-	 [triangle, pol_8]
+	 [triangle, pol_31],
+	 [triangle, pol_34],
+	 [triangle, pol_35],
+	 [triangle, pol_36],
+	 [triangle, pol_37],
+	 [triangle, pol_38]
 	]
        ).
 
 episode(quadrangle,
 	[
-	 [quadrangle, pol_4],
-	 [quadrangle, pol_7],
-	 [quadrangle, pol_8]
+	 [quadrangle, pol_34],
+	 [quadrangle, pol_37],
+	 [quadrangle, pol_38]
 	],
 	[
-	 [quadrangle, pol_1],
-	 [quadrangle, pol_2],
-	 [quadrangle, pol_3],
-	 [quadrangle, pol_5],
-	 [quadrangle, pol_6]
+	 [quadrangle, pol_31],
+	 [quadrangle, pol_32],
+	 [quadrangle, pol_33],
+	 [quadrangle, pol_35],
+	 [quadrangle, pol_36]
 	]
        ).
 
 episode(pentagon,
 	[
-	 [pentagon, pol_1],
-	 [pentagon, pol_3],
-	 [pentagon, pol_6]
+	 [pentagon, pol_31],
+	 [pentagon, pol_35],
+	 [pentagon, pol_36]
 	],
 	[
-	 [pentagon, pol_2],
-	 [pentagon, pol_4],
-	 [pentagon, pol_5],
-	 [pentagon, pol_7],
-	 [pentagon, pol_8]
-	]
-       ).
-
-episode(hexagon,
-	[
-
-	],
-	[
-	 [hexagon, pol_1],
-	 [hexagon, pol_2],
-	 [hexagon, pol_3],
-	 [hexagon, pol_4],
-	 [hexagon, pol_5],
-	 [hexagon, pol_6],
-	 [hexagon, pol_7],
-	 [hexagon, pol_8]
+	 [pentagon, pol_32],
+	 [pentagon, pol_33],
+	 [pentagon, pol_34],
+	 [pentagon, pol_37],
+	 [pentagon, pol_38]
 	]
        ).
 

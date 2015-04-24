@@ -50,7 +50,7 @@ run_sampling(W, I):-
     display_refresh,
     display_polygon_list(Cs_1, g),
     open(Out_file, write, Out),
-    write_polygons(Cs_1, Out, 1),
+    write_polygons(Cs_1, Out, I, 1),
     close(Out),
     (debug_(1) -> (get_char(_), !); true),
     img_release.

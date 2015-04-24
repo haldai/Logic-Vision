@@ -1,8 +1,9 @@
 % post-process
 post_process([], Return, Temp):-
     Return = Temp, !.
-post_process([C | Cs], Return, Temp):-
-    edges_ends(C, Vs),
+post_process([C_ | Cs], Return, Temp):-
+    edges_ends(C_, Vs),
+    connect_2_isolated_points(Vs, C_, C),
     combination(2, Vs, E_combs_),
     edges_not_in_list(E_combs_, C, E_combs, []),
     connect_and_exam_edges(E_combs, C_1, C),
@@ -10,6 +11,14 @@ post_process([C | Cs], Return, Temp):-
     %replace_large_obtuse_angles(Vs_1, C_1, Final_C),
     append(Temp, [C_1], Temp_1),
     post_process(Cs, Return, Temp_1).
+
+connect_2_isolated_points(Vs, C_, C):-
+    findall(V, (member(V, Vs), isolated_point(V, C_)), Iso),
+    length(Iso, L),
+    (L == 2 ->
+	 (append(C_, [Iso], C), !);
+     (C = C_, !)
+    ).
 
 replace_connected_edges([], C, _, Final_C):-
     Final_C = C, !.

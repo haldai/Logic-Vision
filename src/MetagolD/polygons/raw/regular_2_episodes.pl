@@ -1,14 +1,14 @@
 episode(regular,
 	[
-	 [regular, pol_1],
-	 [regular, pol_4],
-	 [regular, pol_7]
+	 [regular, pol_22],
+	 [regular, pol_26],
+	 [regular, pol_27]
 	],
 	[
-	 [regular, pol_2],
-	 [regular, pol_3],
-	 [regular, pol_5],
-	 [regular, pol_6]
+	 [regular, pol_21],
+	 [regular, pol_23],
+	 [regular, pol_24],
+	 [regular, pol_25]
 	]
        ).
 

@@ -1,16 +1,17 @@
 % predicates for writing .pl file
 %     open('polygons.pl', write, Out),
-write_polygons(Polygons, File, N):-
+write_polygons(Polygons, File, I, N):-
     Polygons == [] ->
 	write(File, "\n");
     (Polygons = [H | T],
      write(File, "polygon(pol_"),
-     write(File, N),
+     concat(I, N, IN),
+     write(File, IN),
      write(File, ","),
      write_list(File, H),
      write(File, ").\n"),
      N2 is N + 1,
-     write_polygons(T, File, N2)
+     write_polygons(T, File, I, N2)
     ).
 
 write_list(File, L):-

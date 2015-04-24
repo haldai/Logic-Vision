@@ -830,3 +830,36 @@ screening_points_in_rect([P | Ps], [P_i, P_m], Re, T):-
     not(point_in_rect(P, P_i, P_m)),
     screening_points_in_rect(Ps, [P_i, P_m], Re, T).
 
+% same polygon
+same_polygon(C1, C2):-
+    same_seg_set(C1, C2).
+
+% standard deviation of a list of numbers
+std_dev([], 0).
+std_dev(L, D):-
+    avg(L, A),
+    sum_squared_diff(L, A, S),
+    length(L, Len),
+    D is sqrt(S/Len).
+
+avg(L, A):-
+    sum(L, S, 0),
+    length(L, Len),
+    A is S/Len.
+
+sum([], Sum, Sum).
+sum([E | Es], Sum, Temp):-
+    Temp_1 is Temp + E,
+    sum(Es, Sum, Temp_1).
+
+sum_squared_diff(L, A, S):-
+    squared_diff_with_num(L, A, SD, []),
+    sum(SD, S, 0).
+    
+squared_diff_with_num([], _, SD, SD).
+squared_diff_with_num([E | Es], A, SD, Temp):-
+    T is (E - A)**2,
+    append(Temp, [T], Temp_1),
+    squared_diff_with_num(Es, A, SD, Temp_1).
+    
+% get all vertex angles list

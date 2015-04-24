@@ -191,7 +191,7 @@ gogogo(Eps, W, I):-
     % load facts
     format(atom(Fact_file), '../polygons/facts/~w_~d_R.pl', [W, I]),
     [Fact_file],
-    asserta(clausebound(10)),
+    asserta(clausebound(5)),
     %timelimit(TimeLimit),
     %statistics(cputime,[Total1,Previous]),%write('----------start'),write(I),nl,
     %time_out(learn_seq(Eps,Hyp),TimeLimit,Result),

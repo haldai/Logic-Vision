@@ -346,6 +346,9 @@ edge_angle(X1, Y1, X2, Y2, X3, Y3, A):-
     Cos is P/(D1*D2),
     A is acos(Cos).
 
+edge_angle([X1, Y1], [X2, Y2], [X3, Y3], A):-
+    edge_angle(X1, Y1, X2, Y2, X3, Y3, A).
+
 % define point_color/2
 point_color(P, C):-
     P = [X, Y],

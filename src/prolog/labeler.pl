@@ -8,29 +8,29 @@ label_from_file(Img_file, Poly_file, Label_file, Out):-
 	  [Label_file],
 	  findall(P, polygon(P, _), Polygons),
 	  tell(Out),
-	  writeln(':- discontiguous triangle/1.'),
-	  writeln(':- discontiguous not_triangle/1.'),
-	  label_all_triangle(Polygons),
-	  writeln(''),
-	  writeln(':- discontiguous quadrangle/1.'),
-	  writeln(':- discontiguous not_quadrangle/1.'),
-	  label_all_quadrangle(Polygons),
-	  writeln(''),
-	  writeln(':- discontiguous pentagon/1.'),
-	  writeln(':- discontiguous not_pentagon/1.'),
-	  label_all_pentagon(Polygons),
-	  writeln(''),
-	  writeln(':- discontiguous hexagon/1.'),
-	  writeln(':- discontiguous not_hexagon/1.'),
-	  label_all_hexagon(Polygons),
+	  %writeln(':- discontiguous triangle/1.'),
+	  %writeln(':- discontiguous not_triangle/1.'),
+	  %label_all_triangle(Polygons),
+	  %writeln(''),
+	  %writeln(':- discontiguous quadrangle/1.'),
+	  %writeln(':- discontiguous not_quadrangle/1.'),
+	  %label_all_quadrangle(Polygons),
+	  %writeln(''),
+	  %writeln(':- discontiguous pentagon/1.'),
+	  %writeln(':- discontiguous not_pentagon/1.'),
+	  %label_all_pentagon(Polygons),
+	  %writeln(''),
+	  %writeln(':- discontiguous hexagon/1.'),
+	  %writeln(':- discontiguous not_hexagon/1.'),
+	  %label_all_hexagon(Polygons),
 	  %writeln(''),
 	  %writeln(':- discontiguous regular/1.'),
 	  %writeln(':- discontiguous not_regular/1.'),
 	  %label_all_regular(Polygons),
 	  %writeln(''),
-	  %writeln(':- discontiguous right_angle/1.'),
-	  %writeln(':- discontiguous not_right_angle/1.'),
-	  %label_all_right_angle(Polygons),
+	  writeln(':- discontiguous right_triangle/1.'),
+	  writeln(':- discontiguous not_right_triangle/1.'),
+	  label_all_right_triangle(Polygons),
 	  told,
 	  write('Labels assigned to file '),
 	  write(Out),
@@ -79,9 +79,9 @@ regular(Poly):-
     polygon(Poly, Edges),
     point_in_polygon(P, Edges), !.
 
-right_angle(Poly):-
+right_triangle(Poly):-
     label(X, Y),
-    right_angle(X, Y),
+    right_triangle(X, Y),
     P = [X, Y],
     polygon(Poly, Edges),
     point_in_polygon(P, Edges), !.
@@ -172,20 +172,20 @@ label_all_regular([Poly | Ps]):-
     ),
     label_all_regular(Ps), !.
 
-% label right_angles
-label_all_right_angle([]):-
+% label right_triangles
+label_all_right_triangle([]):-
     true, !.
-label_all_right_angle([Poly | Ps]):-
+label_all_right_triangle([Poly | Ps]):-
     polygon(Poly, _),
-    (right_angle(Poly) ->
-	 (write('right_angle('),
+    (right_triangle(Poly) ->
+	 (write('right_triangle('),
 	  write(Poly),
 	  writeln(').')
 	 );
-     (write('not_right_angle('),
+     (write('not_right_triangle('),
       write(Poly),
       writeln(').')
      )
     ),
-    label_all_right_angle(Ps), !.
+    label_all_right_triangle(Ps), !.
 
