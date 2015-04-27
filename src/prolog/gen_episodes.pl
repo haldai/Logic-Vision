@@ -1,8 +1,21 @@
-print_episodes(Names, W, I):-
+print_episodes_all(Names, W, I):-
     format(atom(Out_file), '../MetagolD/polygons/raw/~w_~d_episodes.pl', [W, I]),
     tell(Out_file),
     gen_episodes(Names, W, I),
     told.
+
+print_episodes_all(Names, W):-
+    format(atom(Out_file), '../MetagolD/polygons/raw/~w_episodes.pl', [W]),
+    tell(Out_file),
+    gen_episodes(Names, W),
+    told.
+
+gen_episodes([], _):-
+    true.
+gen_episodes([N | Ns], W):-
+    gen_episode(N, W),
+    writeln(''),
+    gen_episodes(Ns, W).
 
 gen_episodes([], _, _):-
     true.
@@ -10,6 +23,21 @@ gen_episodes([N | Ns], W, I):-
     gen_episode(N, W, I),
     writeln(''),
     gen_episodes(Ns, W, I).
+
+gen_episode(Name, W):-
+    format(atom(Poly_file), '../../results/~w_bk.pl', [W]),
+    format(atom(Label_file), '../MetagolD/polygons/raw/~w_label.pl', [W]),
+    write('episode('),
+    write(Name),
+    writeln(','),
+    evaluate_all_labels(Name, Poly_file, Label_file, Pos, Neg),
+    writeln('\t['),
+    print_episodes(Name, Pos),
+    writeln('\t],'),
+    writeln('\t['),
+    print_episodes(Name, Neg),
+    writeln('\t]'),
+    writeln('       ).').
 
 gen_episode(Name, W, I):-
     format(atom(Poly_file), '../../results/~w_~d_R.pl', [W, I]),

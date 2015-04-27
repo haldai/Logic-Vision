@@ -61,3 +61,49 @@ run_labeling(W, I):-
     format(atom(Label_file), '../../labels/~w_~d_label.pl', [W, I]),
     format(atom(Out_file), '../MetagolD/polygons/raw/~w_~d_label.pl', [W, I]),
     label_from_file(Img_file, Poly_file, Label_file, Out_file).
+
+run_sampling_image(Img_file, Out_file, I):-
+    img_load(Img_file, _),
+    img_quantize(2),
+    display_refresh,
+    sample_conjecture_edges_1(300, 200, Cs),
+    !,
+    display_polygon_list(Cs, r),
+    print_list(Cs),
+    post_process(Cs, Cs_1, []),
+%    build_connected_components(E, P),
+    display_refresh,
+    display_polygon_list(Cs_1, g),
+    open(Out_file, write, Out),
+    write_polygons(Cs_1, Out, I, 1),
+    close(Out),
+    (debug_(1) -> (get_char(_), !); true),
+    img_release.
+
+run_sampling_list(D, [I | Is]):-
+    format(atom(Img_file), '../../data/~w/~d.jpg', [D, I]),
+    format(atom(Out_file), '../../results/~w/~d.pl', [D, I]),
+    run_sampling_image(Img_file, Out_file, I),
+    run_sampling_list(D, Is).
+
+% D is dir name, N is number of images
+run_sampling_dir(D, N):-
+    findall(I, between(1, N, I), List),
+    run_sampling_list(D, List).
+    
+
+run_checker_list(D, [I | Is]):-
+    writeln(I),
+    format(atom(Img_file), '../../data/~w/~d.jpg', [D, I]),
+    format(atom(Out_file), '../../results/~w/~d.pl', [D, I]),
+    [Out_file],
+    img_load(Img_file, _),
+    display_all_polygons(r),
+    unload_file(Out_file),
+    get_char(_),
+    img_release,
+    run_checker_list(D, Is).
+
+run_checker_dir(D, S, E):-
+    findall(I, between(S, E, I), List),
+    run_checker_list(D, List).

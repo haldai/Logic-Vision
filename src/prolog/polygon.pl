@@ -44,7 +44,7 @@ edge_numbers(Polygon, N):-
 % get all angles
 angles_list(X, Y):-
     edges_ends(X, Vs),
-    all_vertex_angles_list(Vs, X, Y, []). % TODO
+    all_vertex_angles_list(Vs, X, Y, []).
 
 all_vertex_angles_list([], _, Return, Temp):-
     Return = Temp, !.

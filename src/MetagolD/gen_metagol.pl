@@ -13,11 +13,6 @@
 %xx prove(Atoms,_,_) :- write('PROVING '), write(Atoms), nl, fail. 
 prove([],Prog,Prog).
 prove([Atom-PostTest|Atoms],Prog1,Prog2) :-
-    %xx 
-    /*(Atom=[athleteplaysforteam,'coach:vincent_lecavalier',XX]->
-trace;
-true
-),*/
     %write('dProve'-Atom),
     %--primatom(Atom), !,
     %***---Atom=[P|_],arity(Atom,Arity),defined(P/Arity),!, %***
@@ -31,30 +26,17 @@ true
 %	(d_prove([Atom-Post],Prog1);(write('FAILED DPROVE'),nl,fail)),
 %	prove(Atoms,Prog1,Prog2).
 prove([Atom-PostTest|Atoms],Prog1,Prog2) :-
-    %(Prog1 = ps([metasub(tailrec,[athletehomestadium/2,athleteplaysforteam/2])],sig([athletehomestadium/2,athletehomestadium_1/_131254,athleteplaysforteam/2,teamhomestadium/2],[]),s(0),[instance,chain,inverse,tailrec]) ->
-%	 true;%(trace, spy d_prove/2, spy abduce);
-%     true
-    %),
     % Atom is a list of Constant/Variables
     %xx  	write('Prog1='), write(Atom-Prog1), nl, 
     metarule(RuleName,MetaSub,(Atom:-Body),PreTest,Prog1),
     %xx  	write('MetaRule='), write(metarule(RuleName,MetaSub,(Atom:-Body),PreTest)), nl, 
     call(PreTest),
-    %--*** to filter hypothesis with examples 
-    (PostTest==noExampleinH->   
-	 RuleName\==instance;
+    (PostTest==noExampleinH->   %--*** to filter hypothesis with examples 
+			       RuleName\==instance;
      true
     ),
     %xx  	write('Passed PreTest'), nl, 
     %xx  	write('TRYING CLAUSE:'), nl, printprog([metasub(RuleName,MetaSub)]),
-    /*(Prog1=ps([metasub(inverse,[athleteplayssport_2/2,athleteplaysforteam/2]),metasub(chain,[athleteplayssport_1/2,athleteplaysforteam/2,athleteplayssport_2/2]),metasub(tailrec,[athleteplayssport/2,athleteplayssport_1/2])],sig([athleteplayssport/2,athleteplayssport_1/2,athleteplayssport_2/2,athleteplaysforteam/2],[]),0,[chain,inverse,tailrec])->
-trace;
-true),*/
-    %((RuleName=instance,Atom=[athleteplaysforteam,'athlete:john_salmons',A])->
-    /*(RuleName=instance,Atom=[athleteplaysforteam,'athlete:john_salmons',A],Prog1=ps([metasub(chain,[athletehomestadium/2,athleteplaysforteam/2,teamhomestadium/2])],sig([athletehomestadium/2,athletehomestadium_1/_131254,athleteplaysforteam/2,teamhomestadium/2],[]),s(0),[instance,chain])->
-trace; %,spy abduce/3
-true
-),*/
     abduce(metasub(RuleName,MetaSub),Prog1,Prog3), % Binds MetaSub
     Prog3=ps(_,_,Left,_),
     %xx  	write('CLAUSES LEFT='), write(Left), nl, 
@@ -311,9 +293,9 @@ metarule(RuleName,MetaSub,Rule,PreTest,Program) :-
     element(RuleName,MetaRules),
     metarule1(RuleName,MetaSub,Rule,PreTest,Program).
 
-%***
-metarule1(property,[P/1,X],([P,X] :- []),Pre,Prog) :-   
-    Prog=ps(_,sig(Ps,_),_,_), Pre=element(P/1,Ps).
+
+metarule1(property,[P/1,X],([P,X] :- []),Pre,Prog) :-   %***
+						       Prog=ps(_,sig(Ps,_),_,_), Pre=element(P/1,Ps).
 metarule1(instance,[P/A,X,Y],([P,X,Y] :- []),Pre,Prog) :-
     Prog=ps(_,sig(Ps,_),_,_), Pre=element(P/A,Ps).
 metarule1(base1,[P/2,Q/1],([P,X,X] :- [[Q,X]]-true),Pre,Prog) :-

@@ -19,7 +19,7 @@ point_near_thresh_ex(0.03).
 % combo minimum dist threshold
 combo_min_dist_thresh(0.02).
 % inside combo dist threshold
-combo_max_dist_thresh(0.1).
+combo_max_dist_thresh(0.7).
 % recursion limit for edge_line testing
 recursion_limit(6).
 % new point sampling times limit

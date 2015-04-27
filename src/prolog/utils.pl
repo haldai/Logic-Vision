@@ -862,4 +862,3 @@ squared_diff_with_num([E | Es], A, SD, Temp):-
     append(Temp, [T], Temp_1),
     squared_diff_with_num(Es, A, SD, Temp_1).
     
-% get all vertex angles list

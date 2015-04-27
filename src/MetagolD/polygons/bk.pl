@@ -67,27 +67,27 @@ suffix(L,X) :-
     [P_post].
 
 % predicates for abduction
-dyadics([polygon/2, list_length/2, connect_edges/3, ignore_edge/3]).
+%dyadics([polygon/2, list_length/2, connect_edges/3, edges_length_list/2, angles_list/2, has_angle/3, std_dev_bounded/2]). % has_angle/3
+
+dyadics([polygon/2, list_length/2, connect_edges/3]).
 monadics([]). % triangle/1
 
 % other primitives
 
-%num_edges(X, Y):-
-%    polygon(X, L),
-%    list_length(L, Y).
-
 % predicate for list length
 list_length(X, N):-
     X = [_|_],
-    length(X, N),
-    integer_(N).
+    integer_(N),
+    length(X, N).
 
 % connect obtuse angles within threshold
 connect_edges(X, Y, T):-
     thresh_1(T),
     edges_ends(X, Vs),
     replace_connected_edges(Vs, X, T, Y),
-    (same_seg(X, Y) ->
+    length(X, L1),
+    length(Y, L2),
+    (L1 =< L2 ->
 	 (fail, !);
      (true, !)
     ).
@@ -101,34 +101,18 @@ ignore_edge(X, Y, T):-
      (true, !)
     ).
 
+integer_(0).
 integer_(1). integer_(2).
 integer_(3). integer_(4).
 integer_(5). integer_(6).
 integer_(7). integer_(8).
 integer_(9). integer_(10).
 
-thresh_1(0.002). thresh_1(0.004).
-thresh_1(0.006). thresh_1(0.008).
-thresh_1(0.010). thresh_1(0.012).
-%thresh_1(0.014). thresh_1(0.016).
-%thresh_1(0.018). thresh_1(0.020).
-%thresh_1(0.022). thresh_1(0.024).
-%thresh_1(0.026). thresh_1(0.028).
-%thresh_1(0.030). thresh_1(0.032).
-%thresh_1(0.034). thresh_1(0.036).
-%thresh_1(0.038). thresh_1(0.040).
-
-thresh_2(0.10). thresh_2(0.12).
-thresh_2(0.14). thresh_2(0.16).
-thresh_2(0.18). thresh_2(0.20).
-thresh_2(0.22). thresh_2(0.24).
-thresh_2(0.26). thresh_2(0.28).
-thresh_2(0.30). thresh_2(0.32).
-thresh_2(0.34). thresh_2(0.36).
-thresh_2(0.38). thresh_2(0.40).
-thresh_2(0.40). thresh_2(0.42).
-thresh_2(0.44). thresh_2(0.46).
-thresh_2(0.48). thresh_2(0.50).
+thresh_1(0.01). thresh_1(0.02).
+thresh_1(0.03). thresh_1(0.04).
+thresh_1(0.05). thresh_1(0.06).
+thresh_1(0.07). thresh_1(0.08).
+thresh_1(0.09). thresh_1(0.10).
 
 % list for edges length
 edges_length_list([], Y, Temp):-
@@ -136,32 +120,35 @@ edges_length_list([], Y, Temp):-
 edges_length_list([X | Xs], Y, Temp):-
     seg_length(X, L),
     append(Temp, [L], Temp_1),
-    edges_length_list(Xs, Y, Temp).
+    edges_length_list(Xs, Y, Temp_1).
 
 edges_length_list(Edges, Edges_len_list):-
     edges_length_list(Edges, Edges_len_list, []).
 
 % bound the standard deviation of a list
 std_dev_bounded(List, T):-
+    List = [X | _],
+    number(X),
     thresh_3(T),
     std_dev(List, D),
-    D < T.
+    D =< T.
 
-thresh_3(0.10). thresh_3(0.12).
-thresh_3(0.14). thresh_3(0.16).
-thresh_3(0.18). thresh_3(0.20).
-thresh_3(0.22). thresh_3(0.24).
-thresh_3(0.26). thresh_3(0.28).
-thresh_3(0.30). thresh_3(0.32).
-thresh_3(0.34). thresh_3(0.36).
-thresh_3(0.38). thresh_3(0.40).
-thresh_3(0.40). thresh_3(0.42).
-thresh_3(0.44). thresh_3(0.46).
-thresh_3(0.48). thresh_3(0.50).
+thresh_3(0.01). thresh_3(0.02).
+thresh_3(0.03). thresh_3(0.04).
+thresh_3(0.05). thresh_3(0.06).
+thresh_3(0.07). thresh_3(0.08).
+thresh_3(0.09). thresh_3(0.10).
+thresh_3(0.11). thresh_3(0.12).
+thresh_3(0.13). thresh_3(0.14).
+thresh_3(0.15). thresh_3(0.16).
+thresh_3(0.17). thresh_3(0.18).
+thresh_3(0.19). thresh_3(0.20).
 
 % use edge_angle/7 to define right angle
 % REMARK: RAD angle devided by pi/1.
 has_angle(Angles, A_val, A_thresh):-
+    Angles = [X | _],
+    number(X),
     angle_val(A_val),
     thresh_4(A_thresh),
     member(Angle, Angles),
@@ -174,6 +161,9 @@ angle_val(0.5). angle_val(0.6).
 angle_val(0.7). angle_val(0.8).
 angle_val(0.9). angle_val(1.0).
 
+thresh_4(0.01). thresh_4(0.02).
+thresh_4(0.04). thresh_4(0.06).
+thresh_4(0.08). thresh_4(0.20).
 thresh_4(0.10). thresh_4(0.12).
 thresh_4(0.14). thresh_4(0.16).
 thresh_4(0.18). thresh_4(0.20).

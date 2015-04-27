@@ -184,12 +184,39 @@ scripts:-
 
 timelimit(600000). % 1min 
 
-gogogo(Eps, W, I):-
+gogogo_multi(Eps, W, I):-
     % load training examples
     format(atom(TrainExs), '../polygons/raw/~w_~d_episodes.pl', [W, I]),
     [TrainExs],
     % load facts
     format(atom(Fact_file), '../polygons/facts/~w_~d_R.pl', [W, I]),
+    [Fact_file],
+    asserta(clausebound(5)),
+    %timelimit(TimeLimit),
+    %statistics(cputime,[Total1,Previous]),%write('----------start'),write(I),nl,
+    %time_out(learn_seq(Eps,Hyp),TimeLimit,Result),
+    learn_seq(Eps,Hyp),
+    Hyp=ps(Hyp0,_,_,_),printprog(Hyp0).
+    %statistics(cputime,[Total2,TimeTaken0]),TimeTaken is TimeTaken0/1000,
+
+    %tell('oneTime.pl'),
+    %write(TimeTaken),write(' '),
+    %told,
+
+%    (Result==success->
+%	 test_seq(Eps,Hyp),accuracy(Ep,PA);
+%     write('%----Time out'),nl,PA=0
+%    ).
+    %tell('onePA.pl'),
+    %write(PA),write(' '),
+    %told. 
+
+gogogo_single(Eps, W):-
+    % load training examples
+    format(atom(TrainExs), '../polygons/raw/~w_episodes.pl', [W]),
+    [TrainExs],
+    % load facts
+    format(atom(Fact_file), '../polygons/facts/~w_bk.pl', [W]),
     [Fact_file],
     asserta(clausebound(5)),
     %timelimit(TimeLimit),

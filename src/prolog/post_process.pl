@@ -24,7 +24,7 @@ replace_connected_edges([], C, _, Final_C):-
     Final_C = C, !.
 replace_connected_edges([V | Vs], C_1, T, Final_C):-
     findall(E, (member(E, C_1), member(V, E)), Es),
-    (Es = [E1, E2] -> (true, !); 
+    ((length(Es, LL), LL >= 2, Es = [E1, E2]) -> (true, !); 
      (replace_connected_edges(Vs, C_1, T, Final_C), !)
     ),
     ((E1 = [P1, V], E2 = [V, P2]);
@@ -162,10 +162,3 @@ isolated_point(P, C):-
     length(Es, L),
     L == 1,
     !.
-
-
-% test  primitives
-connect_edges(X, Y, T):-
-    %thresh_1(T),
-    edges_ends(X, Vs),
-    replace_connected_edges(Vs, X, T, Y).
