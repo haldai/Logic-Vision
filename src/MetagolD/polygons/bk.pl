@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FlashFill domain-specific code
+% Polygon domain-specific code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %clausebound(5).
@@ -10,7 +10,7 @@
 
 %metaruless([[precon,base,chain,inverse,property]]). %chain,
 %metaruless([[chain,inverse,tailrec]]). %base--inverse
-metaruless([[chain, property_chain]]). % ,inverse,tailrec
+metaruless([[chain, property_chain, property_precon]]). % ,inverse,tailrec
 %note:instance and property are proved by d_proved
 
 
@@ -67,10 +67,21 @@ suffix(L,X) :-
     [P_post].
 
 % predicates for abduction
-%dyadics([polygon/2, list_length/2, connect_edges/3, edges_length_list/2, angles_list/2, has_angle/3, std_dev_bounded/2]). % has_angle/3
+%dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
 
 dyadics([polygon/2, list_length/2, connect_edges/3]).
+
+%dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
+
 monadics([]). % triangle/1
+
+% learned primitives
+% triangles
+triangle_1_x(A,C,H):-connect_edges(A,B,C),list_length(B,H).
+triangle_0_x(A,A2,B2):-polygon(A,B),triangle_1_x(B,A2,B2).
+triangle_0_x(A,G):-polygon(A,B),list_length(B,G).
+triangle_x(A):-triangle_0_x(A,0.02,3).
+triangle_x(A):-triangle_0_x(A,3).
 
 % other primitives
 
@@ -82,6 +93,8 @@ list_length(X, N):-
 
 % connect obtuse angles within threshold
 connect_edges(X, Y, T):-
+    not(var(X)),
+    X = [_ | _],
     thresh_1(T),
     edges_ends(X, Vs),
     replace_connected_edges(Vs, X, T, Y),
@@ -89,16 +102,18 @@ connect_edges(X, Y, T):-
     length(Y, L2),
     (L1 =< L2 ->
 	 (fail, !);
-     (true, !)
+     true
     ).
 
 % ignore short edges within threshold
 ignore_edge(X, Y, T):-
+    not(var(X)),
+    X = [_ | _],
     thresh_2(T),
     ignore_edges(X, X, T, Y),
     (same_seg(X, Y) ->
 	 (fail, !);
-     (true, !)
+     true
     ).
 
 integer_(0).
@@ -152,8 +167,7 @@ has_angle(Angles, A_val, A_thresh):-
     angle_val(A_val),
     thresh_4(A_thresh),
     member(Angle, Angles),
-    abs(Angle - A_val) < A_thresh,
-    !.
+    abs(Angle - A_val) < A_thresh.
 
 angle_val(0.1). angle_val(0.2).
 angle_val(0.3). angle_val(0.4).
@@ -161,18 +175,6 @@ angle_val(0.5). angle_val(0.6).
 angle_val(0.7). angle_val(0.8).
 angle_val(0.9). angle_val(1.0).
 
-thresh_4(0.01). thresh_4(0.02).
-thresh_4(0.04). thresh_4(0.06).
-thresh_4(0.08). thresh_4(0.20).
-thresh_4(0.10). thresh_4(0.12).
-thresh_4(0.14). thresh_4(0.16).
-thresh_4(0.18). thresh_4(0.20).
-thresh_4(0.22). thresh_4(0.24).
-thresh_4(0.26). thresh_4(0.28).
-thresh_4(0.30). thresh_4(0.32).
-thresh_4(0.34). thresh_4(0.36).
-thresh_4(0.38). thresh_4(0.40).
-thresh_4(0.40). thresh_4(0.42).
-thresh_4(0.44). thresh_4(0.46).
-thresh_4(0.48). thresh_4(0.50).
-
+thresh_4(0.005). thresh_4(0.010).
+thresh_4(0.015). thresh_4(0.020).
+thresh_4(0.025). thresh_4(0.030).

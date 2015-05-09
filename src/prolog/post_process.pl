@@ -22,6 +22,10 @@ connect_2_isolated_points(Vs, C_, C):-
 
 replace_connected_edges([], C, _, Final_C):-
     Final_C = C, !.
+replace_connected_edges(_, C, _, Final_C):-
+    length(C, L),
+    L == 1,
+    Final_C = C, !.
 replace_connected_edges([V | Vs], C_1, T, Final_C):-
     findall(E, (member(E, C_1), member(V, E)), Es),
     ((length(Es, LL), LL >= 2, Es = [E1, E2]) -> (true, !); 
@@ -38,7 +42,7 @@ replace_connected_edges([V | Vs], C_1, T, Final_C):-
     (abs(DV1 + DV2 - D12)/D12 < T ->
 	 (New_edge = [P1, P2],
 	  list_delete(C_1, Es, C_2),
-	  append(C_2, [New_edge], C_3),
+	  add_edge_no_dup(C_2, New_edge, C_3),
 	  edges_ends(C_3, Vs_1),
 	  replace_connected_edges(Vs_1, C_3, T, Final_C),
 	  !

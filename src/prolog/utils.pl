@@ -557,14 +557,15 @@ intersected_or_near(E1, E2):-
 
 % get end points of all edges in a list
 edges_ends(Edges, Ends, Temp):-
-    Edges == [] ->
-	(list_to_set(Temp, Ends), !);
-    (Edges = [Head | Tail],
-     Head = [P1, P2],
-     append(Temp, [P1], Temp_1),
-     append(Temp_1, [P2], Temp_2),
-     edges_ends(Tail, Ends, Temp_2),
-     !
+    (Edges == [] ->
+	 (list_to_set(Temp, Ends), !);
+     (Edges = [Head | Tail],
+      Head = [P1, P2],
+      append(Temp, [P1], Temp_1),
+      append(Temp_1, [P2], Temp_2),
+      edges_ends(Tail, Ends, Temp_2),
+      !
+     )
     ).
 
 edges_ends(Edges, Ends):-
@@ -650,6 +651,12 @@ seg_in_set(Seg, [S | Ss], D):-
 	 (D = S, !);
      (seg_in_set(Seg, Ss, D), !)
     ).
+
+% add edge and check wether New edge is existed
+add_edge_no_dup(Set, Seg, New_set):-
+    seg_in_set(Seg, Set, _) ->
+	(New_set = Set, !);
+    append(Set, [Seg], New_set).
 
 % randomly sampling a point on canvas edge
 random_point_on_canvas_edge([X, Y]):-

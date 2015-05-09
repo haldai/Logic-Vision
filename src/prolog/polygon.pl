@@ -43,6 +43,8 @@ edge_numbers(Polygon, N):-
 
 % get all angles
 angles_list(X, Y):-
+    not(var(X)),
+    X = [_ | _],
     edges_ends(X, Vs),
     all_vertex_angles_list(Vs, X, Y, []).
 

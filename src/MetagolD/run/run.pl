@@ -1,4 +1,5 @@
 :-['../gen_metagol.pl'].
+:-['../new_gen_metagol.pl'].
 :-['../polygons/bk.pl'].  %prim2_ep,
 
 :- expects_dialect(sicstus).
@@ -9,12 +10,12 @@
 
 %timelimit(120000).
 
-it_claBound([],SolvedTasks,KBound,KBound):-!. 
+it_claBound([],_,KBound,KBound):-!. 
 it_claBound(UnsolvedTasks,SolvedTasks,KBoundSofar,KBoundSofar):-
     KBoundSofar > 4,!,write('------------ Unsolved tasks: '),write(UnsolvedTasks),nl. 
 it_claBound(Tasks_toBeSolved,SolvedTasks-BK,KBoundSofar,KBound):-
     %learn_seq(SolvedTasks,BK), %***
-    %write('_*_*_*_*new bound'-KBoundSofar-BK),nl,
+    write('_*_*_*_*new bound'-KBoundSofar-BK),nl,
     NewKBoundSofar is KBoundSofar+1,
     retractall(clausebound(PreKBound)),
     asserta(clausebound(NewKBoundSofar)),

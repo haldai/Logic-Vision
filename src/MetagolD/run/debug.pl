@@ -1,0 +1,1 @@
+metarule(property_chain, [triangle/1,polygon/2,connect_edges/3,_,_], ([connect_edges, [[[190,183],[496,105]],[[190,183],[192,390]],[[192,390],[496,105]]], _, _]:-Body), PreTest, ps([metasub(property_chain, [triangle/1,polygon/2,connect_edges/3,_,_])], sig([triangle/1,polygon/2,list_length/2,connect_edges/3],[]), 0, [chain,property_chain])).
