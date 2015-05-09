@@ -71,10 +71,10 @@ suffix(L,X) :-
 %dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
 
 % for polygons
-dyadics([polygon/2, list_length/2, connect_edges/3]). 
+%dyadics([polygon/2, list_length/2, connect_edges/3]). 
 
 % for right-angle triangles
-%dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
+dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
 
 monadics([]). % triangle/1
 
@@ -126,14 +126,11 @@ integer_(5). integer_(6).
 integer_(7). integer_(8).
 integer_(9). integer_(10).
 
-
 thresh_1(0.002). thresh_1(0.004).
 thresh_1(0.006). thresh_1(0.008).
 thresh_1(0.010). thresh_1(0.015).
 thresh_1(0.02). thresh_1(0.03).
 thresh_1(0.04). thresh_1(0.05).
-
-
 
 % list for edges length
 edges_length_list([], Y, Temp):-

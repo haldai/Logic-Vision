@@ -149,7 +149,7 @@ search_all_ms([], ALL_MS, ALL_MS):-
     !.
 search_all_ms([[RuleName, MetaSub, (Atom_v:-Body), PreTest] | MRs], ALL_MS, Temp):-
     findall([RuleName, MetaSub, (Atom_v:-Body), PreTest],
-	    (call(PreTest), constraint_body(Body)),
+	    (call(PreTest), constraint_body(Body, [])),
 	    PPS
 	   ),
     length(PPS, LL),
@@ -158,14 +158,26 @@ search_all_ms([[RuleName, MetaSub, (Atom_v:-Body), PreTest] | MRs], ALL_MS, Temp
     append(Temp, [PPS], Temp_1),
     search_all_ms(MRs, ALL_MS, Temp_1).
 
-constraint_body([]).
-constraint_body([B | Bs]):-
+constraint_body([], _).
+constraint_body([B | Bs], Temp):-
     B = Atom-_,
     Atom = [Pred | _],
     arity(Atom, A),
-    (prim(Pred/A) ->
-	 (constraint_body(Bs), !);
-     A =< 2
+    (member(Pred/A, Temp) ->
+	 (fail, !);
+     (prim(Pred/A) ->
+	  (append(Temp, [Pred/A], Temp_1),
+	   constraint_body(Bs, Temp_1), 
+	   !
+	  );
+      (A =< 2 ->
+	   (append(Temp, [Pred/A], Temp_1),
+	    constraint_body(Bs, Temp_1), 
+	    !
+	   );
+       fail
+      )
+     )
     ).
 
 abduce_mss([], _, ALL_PROGs, ALL_PROGs):-
