@@ -126,11 +126,14 @@ integer_(5). integer_(6).
 integer_(7). integer_(8).
 integer_(9). integer_(10).
 
-thresh_1(0.01). thresh_1(0.02).
-thresh_1(0.03). thresh_1(0.04).
-thresh_1(0.05). thresh_1(0.06).
-thresh_1(0.07). thresh_1(0.08).
-thresh_1(0.09). thresh_1(0.10).
+
+thresh_1(0.002). thresh_1(0.004).
+thresh_1(0.006). thresh_1(0.008).
+thresh_1(0.010). thresh_1(0.015).
+thresh_1(0.02). thresh_1(0.03).
+thresh_1(0.04). thresh_1(0.05).
+
+
 
 % list for edges length
 edges_length_list([], Y, Temp):-
@@ -156,11 +159,6 @@ thresh_3(0.03). thresh_3(0.04).
 thresh_3(0.05). thresh_3(0.06).
 thresh_3(0.07). thresh_3(0.08).
 thresh_3(0.09). thresh_3(0.10).
-thresh_3(0.11). thresh_3(0.12).
-thresh_3(0.13). thresh_3(0.14).
-thresh_3(0.15). thresh_3(0.16).
-thresh_3(0.17). thresh_3(0.18).
-thresh_3(0.19). thresh_3(0.20).
 
 % use edge_angle/7 to define right angle
 % REMARK: RAD angle devided by pi/1.

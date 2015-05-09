@@ -197,7 +197,7 @@ test_new(Eps, W):-
     % load facts
     format(atom(Fact_file), '../polygons/facts/~w_bk.pl', [W]),
     [Fact_file],
-    asserta(clausebound(4)),
+    asserta(clausebound(3)),
     test_learn_seq(Eps,Hyp).
 
 test_learn_seq(Eps, Pn):-
@@ -301,7 +301,8 @@ compute_program_gain(Rules, Pos, Neg, Gain):-
     %writeln('QUERY!'), writeln(Call_str),
     callatom_binds(Call_str, Target, All_results),
     %writeln('RESULT!'), print_list_ln(All_results),
-    reconstruct_proved_atoms(Pred, All_results, Proved_atoms, []),
+    reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
+    list_to_set(Proved_atoms_, Proved_atoms),
     intersection(Proved_atoms, Pos, Proved_Pos),
     intersection(Proved_atoms, Neg, Proved_Neg),
     length(Proved_Pos, P1),
@@ -368,8 +369,9 @@ learn_param_of_prog(New_rules, Pred/A, Pos, Neg, Best_rules/Cov, Best_gain):-
     temp_vars(PL, P_var),
     append([Pred], T_var, Call_para_1),
     append(Call_para_1, P_var, Call_para),
-    callatom_binds(Call_para, P_var, All_paras),
+    callatom_binds(Call_para, P_var, All_paras_),
     !,
+    list_to_set(All_paras_, All_paras),
     (not(All_paras == []) ->
 	 (writeln('Searching best parameters for'),
 	  print_list_ln(New_rules),
@@ -436,7 +438,8 @@ search_for_best_para([Para | Ps], Pred/A, Pos, Neg, Best_para, Best_gain, Temp_p
     %writeln('QUERY!'), writeln(Call_str),
     callatom_binds(Call_str, Target, All_results),
     %writeln('RESULT!'), print_list_ln(All_results),
-    reconstruct_proved_atoms(Pred, All_results, Proved_atoms, []),
+    reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
+    list_to_set(Proved_atoms_, Proved_atoms),
     intersection(Proved_atoms, Pos, Proved_Pos),
     intersection(Proved_atoms, Neg, Proved_Neg),
     length(Proved_Pos, P1),
