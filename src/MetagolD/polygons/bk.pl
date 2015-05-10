@@ -71,10 +71,10 @@ suffix(L,X) :-
 %dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
 
 % for polygons
-%dyadics([polygon/2, list_length/2, connect_edges/3]). 
+dyadics([polygon/2, list_length/2, connect_edges/3]). 
 
 % for right-angle triangles
-dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
+%dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
 
 monadics([]). % triangle/1
 
@@ -100,13 +100,13 @@ connect_edges(X, Y, T):-
     X = [_ | _],
     thresh_1(T),
     edges_ends(X, Vs),
-    replace_connected_edges(Vs, X, T, Y),
-    length(X, L1),
-    length(Y, L2),
-    (L1 =< L2 ->
-	 (fail, !);
-     true
-    ).
+    replace_connected_edges(Vs, X, T, Y).
+%    length(X, L1),
+%    length(Y, L2),
+%    (L1 =< L2 ->
+%	 (fail, !);
+%     true
+%    ).
 
 % ignore short edges within threshold
 ignore_edge(X, Y, T):-
