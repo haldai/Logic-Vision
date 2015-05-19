@@ -68,13 +68,13 @@ suffix(L,X) :-
 
 % predicates for abduction
 % for regular polygons
-%dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
+% dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
 
 % for polygons
 dyadics([polygon/2, list_length/2, connect_edges/3]). 
 
 % for right-angle triangles
-%dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
+% dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
 
 monadics([]). % triangle/1
 
@@ -82,9 +82,7 @@ monadics([]). % triangle/1
 % triangles
 triangle_1_x(A,C,H):-connect_edges(A,B,C),list_length(B,H).
 triangle_0_x(A,A2,B2):-polygon(A,B),triangle_1_x(B,A2,B2).
-triangle_0_x(A,G):-polygon(A,B),list_length(B,G).
-triangle_x(A):-triangle_0_x(A,0.02,3).
-triangle_x(A):-triangle_0_x(A,3).
+triangle_x(A):-triangle_0_x(A,0.015,3).
 
 % other primitives
 
@@ -100,13 +98,13 @@ connect_edges(X, Y, T):-
     X = [_ | _],
     thresh_1(T),
     edges_ends(X, Vs),
-    replace_connected_edges(Vs, X, T, Y).
-%    length(X, L1),
-%    length(Y, L2),
-%    (L1 =< L2 ->
-%	 (fail, !);
-%     true
-%    ).
+    replace_connected_edges(Vs, X, T, Y),
+    length(X, L1),
+    length(Y, L2),
+    (L1 =< L2 ->
+	 (fail, !);
+     true
+    ).
 
 % ignore short edges within threshold
 ignore_edge(X, Y, T):-

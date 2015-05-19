@@ -9,8 +9,17 @@ post_process([C_ | Cs], Return, Temp):-
     connect_and_exam_edges(E_combs, C_1, C),
     %edges_ends(C_1, Vs_1),
     %replace_large_obtuse_angles(Vs_1, C_1, Final_C),
-    append(Temp, [C_1], Temp_1),
-    post_process(Cs, Return, Temp_1).
+    edges_ends(C_1, VV, []),
+    length(VV, LV),
+    length(C_1, LE),
+    ((LV == LE, LE > 2) ->
+	 (append(Temp, [C_1], Temp_1),
+	  post_process(Cs, Return, Temp_1),
+	  !
+	 );
+     fail
+    ),
+    !.
 
 connect_2_isolated_points(Vs, C_, C):-
     findall(V, (member(V, Vs), isolated_point(V, C_)), Iso),

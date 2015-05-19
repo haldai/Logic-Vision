@@ -73,7 +73,6 @@ search_all_progs([Prog | Progs], Return, Temp):-
      )
     ).
 
-    
 search_all_prog(Pred/A, Prog1, ALL_PROGs):-
     Prog1 = ps(Mss, _, N, _),
     get_learned_preds(Mss, Learned_list, []),
@@ -203,27 +202,101 @@ print_all_ms([[RuleName, MetaSub, _, _] | MRs]):-
     printprog([metasub(RuleName, MetaSub)]),
     print_all_ms(MRs).
 
-test_new(Eps, W):-
-    format(atom(TrainExs), '../polygons/raw/~w_episodes.pl', [W]),
+test_new(Eps, W, BK):-
+    format(atom(TrainExs), '../polygons/raw/~w_tr_episodes.pl', [W]),
+    format(atom(TestExs), '../polygons/raw/~w_te_episodes.pl', [W]),
     [TrainExs],
     % load facts
-    format(atom(Fact_file), '../polygons/facts/~w_bk.pl', [W]),
+    format(atom(Fact_file), '../polygons/facts/~w_bk.pl', [BK]),
+    [Fact_file],
+    asserta(clausebound(3)),
+    test_learn_seq(Eps, Hyp),
+    unload_file(TrainExs),
+    test_hypothesis_rules(Eps, Hyp, TestExs, 4),
+    unload_file(Fact_file).
+
+test_hypothesis_rules([], _, _, _).
+test_hypothesis_rules([E | Es], Hyp, TestExs, N):-
+    [TestExs],
+    assert_all_rules(Hyp),
+    episode(E, Pos, Neg), length(Pos, NumP), length(Neg, NumN),
+    append(Pos, Neg, All_ex),
+    query_for_all_ex(All_ex, N, Pos_, Neg_, [], []),
+    intersection(Pos, Pos_, TP_),
+    intersection(Neg, Neg_, TN_),
+    intersection(Neg, Pos_, FP_),
+    intersection(Pos, Neg_, FN_),
+    length(TP_, TP),
+    length(TN_, TN),
+    length(FP_, FP),
+    length(FN_, FN),
+    Acc is (TP + TN)/(NumP + NumN),
+    F1 is (2*TP)/(2*TP + FP + FN),
+    retract_all_rules(Hyp),
+    !,
+    unload_file(TestExs),
+    write("Accuracy: "), writeln(Acc),
+    write("F1 score: "), writeln(F1),
+    test_hypothesis_rules(Es, Hyp, TestExs, N).
+
+query_for_all_ex([], _, Pos_, Neg_, Pos_, Neg_).
+query_for_all_ex([E | Exs], N, Pos_, Neg_, Temp_p, Temp_n):-
+    (query_for_ex(E, N, 0, N) ->
+	 (append(Temp_p, [E], Temp_p_1), 
+	  Temp_n_1 = Temp_n,
+	  !);
+     (append(Temp_n, [E], Temp_n_1),
+      Temp_p_1 = Temp_p
+     )
+    ),
+    query_for_all_ex(Exs, N, Pos_, Neg_, Temp_p_1, Temp_n_1).
+
+query_for_ex(E, N, P_num, T):-
+    N < 0,
+    T > 0,
+    P_num >= ceil((T + 1)/2),
+    !.
+query_for_ex(E, N, P_num, T):-
+    N >= 0,
+    T > 0,
+    E = [Pred | Args],
+    dup_args(Args, N, D_args, []),
+    Goal =.. [Pred | D_args],
+    (call(Goal) ->
+	 (P_num_1 is P_num + 1, !);
+     P_num_1 is P_num
+    ),
+    N1 is N - 1,
+    query_for_ex(E, N1, P_num_1, T).
+
+dup_args([], _, D_args, D_args).
+dup_args([A | As], N, D_args, Temp):-
+    concat(A, '_', A_),
+    concat(A_, N, A_N),
+    append(Temp, [A_N], Temp_1),
+    dup_args(As, N, D_args, Temp_1).
+
+test_new_multi(Eps, W, I):-
+    format(atom(TrainExs), '../polygons/raw/~w_~d_episodes.pl', [W, I]),
+    [TrainExs],
+    % load facts
+    format(atom(Fact_file), '../polygons/facts/~w_~d_R.pl', [W, I]),
     [Fact_file],
     asserta(clausebound(3)),
     test_learn_seq(Eps,Hyp).
 
-test_learn_seq(Eps, Pn):-
+test_learn_seq(Eps, Rules):-
     init_ps(P0),
-    test_learn_seq(Eps, Eps, P0, Pn).
+    test_learn_seq(Eps, Eps, P0, Rules).
 
 test_learn_seq(_, [], B, B):-
     !.
-test_learn_seq(Eps, [E | T], BK, Hyp):-
+test_learn_seq(Eps, [E | T], BK, Rules):-
     episode(E, Pos, Neg), % length(Pos,P), length(Neg,N),
     clausebound(Bnd), %(clausebound(Bnd);(Bnd is floor(log(P+N)/log(2)))),
     interval(1, Bnd, I),
     test_learn_episode(Eps, E, I, BK, Hyp1),
-    test_learn_seq(Eps, T, Hyp1, Hyp), !.
+    test_learn_seq(Eps, T, Hyp1, Rules), !.
 test_learn_seq(_, [E | _], _, _):-
     episode(E, Pos, Neg), length(Pos, P), length(Neg, N),
     (clausebound(Bnd); (Bnd is floor(log(P+N)/log(2)))),
@@ -232,7 +305,7 @@ test_learn_seq(_, [E | _], _, _):-
     !, fail.
 
 % my learn episode with coverage
-test_learn_episode(Eps, Ep, Int, ps(Ms1, sig(Ps1, Cs1), _, _), Prog2):-
+test_learn_episode(Eps, Ep, Int, ps(Ms1, sig(Ps1, Cs1), _, _), Rules):-
     write('EXAMPLE EPISODE: '), write(Ep), nl, nl,
     name(Ep, EpChars),
     episode(Ep, Pos, Neg), Pos = [[Ep|Px]|_], arity([Ep|Px], Epa),
@@ -286,7 +359,7 @@ learn_episode_invent_pred_bound([M | Ms], Int, Pos, Neg, Ep, EpChars, Px, Epa, M
     write('TRY METARULE SET: '), write(MetaRules), nl,
     add_prepost(Pos, Pos1), add_prepost(Neg, Neg1),
     search_prog(Ep/Epa, ps(Ms1, sig([Ep/Epa|Ps3],Cs1), Lim1, MetaRules), Candidates),
-    learn_param_of_progs(Candidates, Pos, Neg, Learned, []/[]-(-1000000), [], []),
+    learn_param_of_progs(Candidates, Pos, Neg, Learned, []/[]-(-1000000), []-(-1000000), []),
     compute_program_gain(Learned, Pos, Neg, Gain),
     (Gain == 'max' ->
 	 (Best_rules = Learned-Gain, !);
@@ -307,7 +380,7 @@ compute_program_gain(Rules, Pos, Neg, Gain):-
     Ex = [Pred | Args],
     length(Args, A),
     assert_all_rules(Rules),
-    % TODO::compute coverage,
+    % compute coverage,
     temp_vars(A, Target),
     append([Pred], Target, Call_str),
     %writeln('QUERY!'), writeln(Call_str),
@@ -327,24 +400,24 @@ compute_program_gain(Rules, Pos, Neg, Gain):-
     ),
     retract_all_rules(Rules).
 
-learn_param_of_progs([], Pos, Neg, Learned, Temp, Learned_temp, Usable_temp):-
+learn_param_of_progs([], Pos, Neg, Learned, Temp, Learned_temp-LGain, Usable_temp):-
     Temp = Rules/Cov-Gain,
     intersection(Cov, Pos, Proved_Pos),
     intersection(Cov, Neg, Proved_Neg),
     length(Proved_Pos, P1),
     length(Pos, P0),
-    ((P1 == 1, P0 > 1) -> %
+    ((P1 == 1; Gain =< LGain) -> %, P0 > 1
 	 (Learned = Learned_temp, !);
      (append(Rules, Learned_temp, Learned_temp_1),
       list_delete(Pos, Cov, Pos_1),
       (Pos_1 == [] ->
 	   (Learned = Learned_temp_1, !);
-       learn_param_of_progs(Usable_temp, Pos_1, Neg, Learned, []/[]-(-1000000), Learned_temp_1, [])
+       learn_param_of_progs(Usable_temp, Pos, Neg, Learned, []/[]-(-1000000), Learned_temp_1-Gain, [])
       )
      )
     ),
     !.
-learn_param_of_progs([P | Progs], Pos, Neg, Learned, Temp, Learned_temp, Usable_temp):-
+learn_param_of_progs([P | Progs], Pos, Neg, Learned, Temp, Learned_temp-LGain, Usable_temp):-
     P = ps(Mss, _, _, _),
     get_clause_and_para(Mss, Clause, Para, [], []),
     %writeln('=============='),
@@ -359,7 +432,7 @@ learn_param_of_progs([P | Progs], Pos, Neg, Learned, Temp, Learned_temp, Usable_
     Pos = [Ex | _],
     Ex = [Pred | _],
     arity(Ex, A),
-    learn_param_of_prog(New_rules, Pred/A, Pos, Neg, Best_rules/Cov, Gain),
+    learn_param_of_prog(New_rules, Learned_temp, Pred/A, Pos, Neg, Best_rules/Cov, Gain),
     %writeln(Best_rules/Cov),
     (not(Best_rules == []) ->
 	 (append(Usable_temp, [P], Usable_temp_1), !);
@@ -370,9 +443,9 @@ learn_param_of_progs([P | Progs], Pos, Neg, Learned, Temp, Learned_temp, Usable_
 	 (Temp_1 = Best_rules/Cov-Gain, !);
      Temp_1 = Temp
     ),
-    learn_param_of_progs(Progs, Pos, Neg, Learned, Temp_1, Learned_temp, Usable_temp_1).
+    learn_param_of_progs(Progs, Pos, Neg, Learned, Temp_1, Learned_temp-LGain, Usable_temp_1).
 
-learn_param_of_prog(New_rules, Pred/A, Pos, Neg, Best_rules/Cov, Best_gain):-
+learn_param_of_prog(New_rules, Learned, Pred/A, Pos, Neg, Best_rules/Cov, Best_gain):-
     assert_and_get_head_para(New_rules, Pred/A, Target, Para),
     %print_list(Target),
     %print_list(Para),
@@ -387,7 +460,9 @@ learn_param_of_prog(New_rules, Pred/A, Pos, Neg, Best_rules/Cov, Best_gain):-
     (not(All_paras == []) ->
 	 (writeln('Searching best parameters for'),
 	  print_list_ln(New_rules),
-	  search_for_best_para(All_paras, Pred/A, Pos, Neg, Best_para/Cov_, Best_gain, _, -1000000),
+	  assert_all_rules(Learned),
+	  search_for_best_para(All_paras, Pred/A, Pos, Neg, Best_para/Cov_, Best_gain, _, -1000000, 0),
+	  retract_all_rules(Learned),
 	  %writeln('BEST PARA BEST GAIN!'),
 	  %writeln(Best_para),
 	  %writeln(Best_gain),
@@ -438,20 +513,32 @@ embed_parameters([R | Rs], Pred/A, Best_para, Best_rules, Temp):-
       embed_parameters(Rs, Pred/A, Best_para, Best_rules, Temp_1)
      )
     ).
-    
-search_for_best_para([], _, _, _, Best_para, Best_gain, Temp_para, Temp_gain):-
+  
+search_for_best_para(_, _, _, _, Best_para, Best_gain, Temp_para, Temp_gain, 3):-
+    Best_para = Temp_para,
+    Best_gain = Temp_gain,
+    !.
+search_for_best_para([], _, _, _, Best_para, Best_gain, Temp_para, Temp_gain, _):-
     Best_para = Temp_para, 
     Best_gain = Temp_gain,
     !.
-search_for_best_para([Para | Ps], Pred/A, Pos, Neg, Best_para, Best_gain, Temp_para, Temp_gain):-
+search_for_best_para([Para | Ps], Pred/A, Pos, Neg, Best_para, Best_gain, Temp_para, Temp_gain, Single_time):-
     temp_vars(A, Target),
     append([Pred], Target, Call_str_1),
+    callatom_binds(Call_str_1, Target, All_results_1),
     append(Call_str_1, Para, Call_str),
     %writeln('QUERY!'), writeln(Call_str),
-    callatom_binds(Call_str, Target, All_results),
+    callatom_binds(Call_str, Target, All_results_2),
+    append(All_results_1, All_results_2, All_results),
     %writeln('RESULT!'), print_list_ln(All_results),
     reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
     list_to_set(Proved_atoms_, Proved_atoms),
+    list_to_set(All_results_2, Proved_new),
+    length(Proved_new, Proved_len),
+    (Proved_len == 1 ->
+	 (Single_time_1 is Single_time + 1, !);
+     Single_time_1 = Single_time
+    ),
     intersection(Proved_atoms, Pos, Proved_Pos),
     intersection(Proved_atoms, Neg, Proved_Neg),
     length(Proved_Pos, P1),
@@ -469,7 +556,7 @@ search_for_best_para([Para | Ps], Pred/A, Pos, Neg, Best_para, Best_gain, Temp_p
       Temp_gain_1 = Temp_gain
      )
     ),
-    search_for_best_para(Ps, Pred/A, Pos, Neg, Best_para, Best_gain, Temp_para_1, Temp_gain_1).
+    search_for_best_para(Ps, Pred/A, Pos, Neg, Best_para, Best_gain, Temp_para_1, Temp_gain_1, Single_time_1).
 
 reconstruct_proved_atoms(_, [], Proved_atoms, Temp):-
     Proved_atoms = Temp, !.
@@ -485,7 +572,7 @@ assert_and_get_head_para([R | Rs], Pred/A, Target, Para):-
     R = (Head:-_),
     Head =.. Head_list,
     Head_list = [Head_pred | Head_args],
-    ((Pred == Head_pred) ->
+    ((Pred == Head_pred, Rs == []) ->
 	 (listsplit(Head_args, Target, Para, A),
 	  assert_and_get_head_para(Rs, Pred/A, Target, Para),
 	  !

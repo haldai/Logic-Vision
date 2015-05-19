@@ -5,7 +5,8 @@ write_polygons(Polygons, File, I, N):-
 	write(File, "\n");
     (Polygons = [H | T],
      write(File, "polygon(pol_"),
-     concat(I, N, IN),
+     concat(I, '_', I_),
+     concat(I_, N, IN),
      write(File, IN),
      write(File, ","),
      write_list(File, H),

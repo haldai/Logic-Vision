@@ -205,7 +205,7 @@ learn_episode(Eps,Ep,Int,ps(Ms1,sig(Ps1,Cs1),_,_),Prog2) :-
     %**
     %spy d_prove/2,
     %trace,
-    write('testing'-Prog2),nl,
+    %write('testing'-Prog2),nl,
     (functest(Eps,Ep,Prog2)->
          true;
      fail 
@@ -335,7 +335,7 @@ metasub(instance,Args) :-
 
 callatom(Args) :-
     Goal =.. Args,
-    write('CALLATOM PROVING '), write(Goal), nl, 
+    %write('CALLATOM PROVING '), write(Goal), nl, 
     !, call(Goal).
 %xx  	write('SUCCEEDED '), write(Goal), nl, 
 %***!.
