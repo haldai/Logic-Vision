@@ -138,9 +138,23 @@ eval_prog(Poss, Negss, Prog, MetaSub, Best_prog):-
     ).
 
 % foil gain
-foil_gain(_, _, 0, _, Gain):-
-    Gain = -1000000, !.
-foil_gain(P0, N0, P1, N1, Gain):-
+foil_gain(P0_, N0_, P1_, N1_, Gain):-
+    (P0_ == 0 ->
+	 (P0 = 0.0000001, !);
+     P0 = P0_
+    ),
+    (N0_ == 0 ->
+	 (N0 = 0.0000001, !);
+     N0 = N0_
+    ),
+    (P1_ == 0 ->
+	 (P1 = 0.0000001, !);
+     P1 = P1_
+    ),
+    (N1_ == 0 ->
+	 (N1 = 0.0000001, !);
+     N1 = N1_
+    ),
     Gain is P1*(log(P1/(P1 + N1)) - log(P0/(P0 + N0))).
 
 % search for all metasubs
@@ -269,6 +283,38 @@ query_for_ex(E, N, P_num, T):-
     N1 is N - 1,
     query_for_ex(E, N1, P_num_1, T).
 
+
+query_for_all_ex([], _, _, Pos_, Neg_, Pos_, Neg_).
+query_for_all_ex([E | Exs], N, Para, Pos_, Neg_, Temp_p, Temp_n):-
+    (query_for_ex(E, N, Para, 0, N) ->
+	 (append(Temp_p, [E], Temp_p_1), 
+	  Temp_n_1 = Temp_n,
+	  !);
+     (append(Temp_n, [E], Temp_n_1),
+      Temp_p_1 = Temp_p
+     )
+    ),
+    query_for_all_ex(Exs, N, Para, Pos_, Neg_, Temp_p_1, Temp_n_1).
+
+query_for_ex(E, N, Para, P_num, T):-
+    N < 0,
+    T > 0,
+    P_num >= ceil((T + 1)/2),
+    !.
+query_for_ex(E, N, Para, P_num, T):-
+    N >= 0,
+    T > 0,
+    E = [Pred | Args],
+    dup_args(Args, N, D_args_, []),
+    append(D_args_, Para, D_args),
+    Goal =.. [Pred | D_args],
+    (call(Goal) ->
+	 (P_num_1 is P_num + 1, !);
+     P_num_1 is P_num
+    ),
+    N1 is N - 1,
+    query_for_ex(E, N1, Para, P_num_1, T).
+
 dup_args([], _, D_args, D_args).
 dup_args([A | As], N, D_args, Temp):-
     concat(A, '_', A_),
@@ -335,12 +381,12 @@ learn_episode_bound([N | Ns], Int, Pos, Neg, Ep, EpChars, Px, Epa, Ms1, Ps1, Cs1
     peano(N, Lim1),
     write('TRY CLAUSE BOUND: '), write(N), nl,
     findall(M, (element(M, Int), M =< N), Ms),
-    learn_episode_invent_pred_bound(Ms, Int, Pos, Neg, Ep, EpChars, Px, Epa, Ms1, Ps1, Cs1, Lim1, Learned, []-(-1000000)),
+    Temp = _-G,
+    learn_episode_invent_pred_bound(Ms, Int, Pos, Neg, Ep, EpChars, Px, Epa, Ms1, Ps1, Cs1, Lim1, Learned, []-G),
     Learned = _-Gain,
     (Gain == 'max' ->
 	 (Best_rules = Learned, !);
-     (Temp = _-G,
-      (Gain > G ->
+     ((Gain > G ->
 	   (Temp_1 = Learned, !);
        Temp_1 = Temp
       ),
@@ -376,27 +422,33 @@ learn_episode_invent_pred_bound([M | Ms], Int, Pos, Neg, Ep, EpChars, Px, Epa, M
     ).
 
 compute_program_gain(Rules, Pos, Neg, Gain):-
-    Pos = [Ex | _],
-    Ex = [Pred | Args],
-    length(Args, A),
+    %Pos = [Ex | _],
+    %Ex = [Pred | Args],
+    %length(Args, A),
     assert_all_rules(Rules),
-    % compute coverage,
-    temp_vars(A, Target),
-    append([Pred], Target, Call_str),
-    %writeln('QUERY!'), writeln(Call_str),
-    callatom_binds(Call_str, Target, All_results),
-    %writeln('RESULT!'), print_list_ln(All_results),
-    reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
-    list_to_set(Proved_atoms_, Proved_atoms),
-    intersection(Proved_atoms, Pos, Proved_Pos),
-    intersection(Proved_atoms, Neg, Proved_Neg),
+    %% compute coverage,
+    %temp_vars(A, Target),
+    %append([Pred], Target, Call_str),
+    %%writeln('QUERY!'), writeln(Call_str),
+    %callatom_binds(Call_str, Target, All_results),
+    %%writeln('RESULT!'), print_list_ln(All_results),
+    %reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
+    %list_to_set(Proved_atoms_, Proved_atoms),
+    %intersection(Proved_atoms, Pos, Proved_Pos),
+    %intersection(Proved_atoms, Neg, Proved_Neg),
+    %length(Proved_Pos, P1),
+    %length(Proved_Neg, N1),
+    append(Pos, Neg, All_ex),
+    query_for_all_ex(All_ex, 4, Pos_, Neg_, [], []),
+    intersection(Pos_, Pos, Proved_Pos),
+    intersection(Pos_, Neg, Proved_Neg),
     length(Proved_Pos, P1),
     length(Proved_Neg, N1),
     length(Pos, P0),
     length(Neg, N0),
     ((P1 == P0, N1 == 0) ->
 	 (Gain = 'max', !);
-     foil_gain(P0, N0, P1, N1, Gain)
+     (C is P0 + N0, foil_gain(0, C, P1, N1, Gain))
     ),
     retract_all_rules(Rules).
 
@@ -406,13 +458,13 @@ learn_param_of_progs([], Pos, Neg, Learned, Temp, Learned_temp-LGain, Usable_tem
     intersection(Cov, Neg, Proved_Neg),
     length(Proved_Pos, P1),
     length(Pos, P0),
-    ((P1 == 1; Gain =< LGain) -> %, P0 > 1
+    (Gain =< LGain -> %, P0 > 1
 	 (Learned = Learned_temp, !);
      (append(Rules, Learned_temp, Learned_temp_1),
       list_delete(Pos, Cov, Pos_1),
       (Pos_1 == [] ->
 	   (Learned = Learned_temp_1, !);
-       learn_param_of_progs(Usable_temp, Pos, Neg, Learned, []/[]-(-1000000), Learned_temp_1-Gain, [])
+       (learn_param_of_progs(Usable_temp, Pos, Neg, Learned, []/[]-Gain, Learned_temp_1-Gain, []), !)
       )
      )
     ),
@@ -432,6 +484,7 @@ learn_param_of_progs([P | Progs], Pos, Neg, Learned, Temp, Learned_temp-LGain, U
     Pos = [Ex | _],
     Ex = [Pred | _],
     arity(Ex, A),
+    %writeln(learn_param_of_prog(New_rules, Learned_temp, Pred/A, Pos, Neg, Best_rules/Cov, Gain)),
     learn_param_of_prog(New_rules, Learned_temp, Pred/A, Pos, Neg, Best_rules/Cov, Gain),
     %writeln(Best_rules/Cov),
     (not(Best_rules == []) ->
@@ -461,11 +514,13 @@ learn_param_of_prog(New_rules, Learned, Pred/A, Pos, Neg, Best_rules/Cov, Best_g
 	 (writeln('Searching best parameters for'),
 	  print_list_ln(New_rules),
 	  assert_all_rules(Learned),
+	  %writeln(learn_param_of_prog(New_rules, Learned, Pred/A, Pos, Neg, Best_rules/Cov, Best_gain)),
 	  search_for_best_para(All_paras, Pred/A, Pos, Neg, Best_para/Cov_, Best_gain, _, -1000000, 0),
 	  retract_all_rules(Learned),
-	  %writeln('BEST PARA BEST GAIN!'),
-	  %writeln(Best_para),
-	  %writeln(Best_gain),
+	  %writeln(learn_param_of_prog(New_rules, Learned, Pred/A, Pos, Neg, Best_rules/Cov, Best_gain)),
+	  writeln('BEST PARA BEST GAIN!'),
+	  writeln(Best_para),
+	  writeln(Best_gain),
 	  %writeln(embed_parameters(New_rules, Pred/A, Best_para, Best_rules, [])),
 	  (not(ground(Best_para)) ->
 	       (Best_rules = [],
@@ -523,32 +578,45 @@ search_for_best_para([], _, _, _, Best_para, Best_gain, Temp_para, Temp_gain, _)
     Best_gain = Temp_gain,
     !.
 search_for_best_para([Para | Ps], Pred/A, Pos, Neg, Best_para, Best_gain, Temp_para, Temp_gain, Single_time):-
+    append(Pos, Neg, All_ex),
+    query_for_all_ex(All_ex, 4, Para, Pos_New, Neg_New, [], []),
+    query_for_all_ex(All_ex, 4, Pos_Before, Neg_Before, [], []),
+    append(Pos_New, Pos_Before, Poss_),
+    append(Neg_New, Neg_Before, Negs_),
+    list_to_set(Poss_, Pos_),
+    list_to_set(Negs_, Neg_),
+
     temp_vars(A, Target),
     append([Pred], Target, Call_str_1),
-    callatom_binds(Call_str_1, Target, All_results_1),
+    %callatom_binds(Call_str_1, Target, All_results_1),
     append(Call_str_1, Para, Call_str),
     %writeln('QUERY!'), writeln(Call_str),
     callatom_binds(Call_str, Target, All_results_2),
-    append(All_results_1, All_results_2, All_results),
+    %append(All_results_1, All_results_2, All_results),
     %writeln('RESULT!'), print_list_ln(All_results),
-    reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
-    list_to_set(Proved_atoms_, Proved_atoms),
+    %reconstruct_proved_atoms(Pred, All_results, Proved_atoms_, []),
+    %list_to_set(Proved_atoms_, Proved_atoms),
     list_to_set(All_results_2, Proved_new),
     length(Proved_new, Proved_len),
     (Proved_len == 1 ->
 	 (Single_time_1 is Single_time + 1, !);
      Single_time_1 = Single_time
     ),
-    intersection(Proved_atoms, Pos, Proved_Pos),
-    intersection(Proved_atoms, Neg, Proved_Neg),
+    %intersection(Proved_atoms, Pos, Proved_Pos),
+    %intersection(Proved_atoms, Neg, Proved_Neg),
+    %length(Proved_Pos, P1),
+    %length(Proved_Neg, N1),
+    intersection(Pos_, Pos, Proved_Pos),
+    intersection(Pos_, Neg, Proved_Neg),
     length(Proved_Pos, P1),
     length(Proved_Neg, N1),
     length(Pos, P0),
     length(Neg, N0),
-    foil_gain(P0, N0, P1, N1, Gain),
+    C is P0 + N0,
+    foil_gain(0, C, P1, N1, Gain),
     %writeln(Gain),
     (Gain > Temp_gain ->
-	 (Temp_para_1 = Para/Proved_atoms,
+	 (Temp_para_1 = Para/Pos_,
 	  Temp_gain_1 = Gain,
 	  !
 	 );
@@ -557,6 +625,7 @@ search_for_best_para([Para | Ps], Pred/A, Pos, Neg, Best_para, Best_gain, Temp_p
      )
     ),
     search_for_best_para(Ps, Pred/A, Pos, Neg, Best_para, Best_gain, Temp_para_1, Temp_gain_1, Single_time_1).
+
 
 reconstruct_proved_atoms(_, [], Proved_atoms, Temp):-
     Proved_atoms = Temp, !.

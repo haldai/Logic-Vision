@@ -68,21 +68,23 @@ suffix(L,X) :-
 
 % predicates for abduction
 % for regular polygons
-% dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
+dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
 
 % for polygons
-dyadics([polygon/2, list_length/2, connect_edges/3]). 
+% dyadics([polygon/2, list_length/2, connect_edges/3]). 
 
 % for right-angle triangles
-% dyadics([polygon/2, triangle_x/1, angles_list/2, has_angle/3]). % 
+% dyadics([polygon/2, triangle/1, angles_list/2, has_angle/3]).
 
 monadics([]). % triangle/1
 
 % learned primitives
 % triangles
-triangle_1_x(A,C,H):-connect_edges(A,B,C),list_length(B,H).
-triangle_0_x(A,A2,B2):-polygon(A,B),triangle_1_x(B,A2,B2).
-triangle_x(A):-triangle_0_x(A,0.015,3).
+%triangle_1(A,C,H):-connect_edges(A,B,C),list_length(B,H).
+%triangle_0(A,A2,B2):-polygon(A,B),triangle_1(B,A2,B2).
+%triangle(A):-triangle_0(A,0.04,3).
+%triangle_0(A,G):-polygon(A,B),list_length(B,G).
+%triangle(A):-triangle_0(A,3).
 
 % other primitives
 
