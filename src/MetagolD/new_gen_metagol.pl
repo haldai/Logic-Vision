@@ -711,7 +711,7 @@ get_new_rules([Ms | MIs], Rules, Processed, Temp, M):-
      (metarule(RuleName, MetaSub, C, _, _),    
       numbervars(C, 0, _),
       all_free(MetaSub, Para, []),
-      % TODO:: embed all paras
+      % embed all paras
       embed_free_vars(C, Processed, Para, R, NFree),
       append(Processed, [Head-NFree], Processed_1),
       append(Temp, [R], Temp_1),

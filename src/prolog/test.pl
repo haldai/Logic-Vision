@@ -130,13 +130,17 @@ run_sampling_dir(D, N):-
     findall(I, between(1, N, I), List),
     run_sampling_list(D, List).
     
+run_checker_list(_, []).
 run_checker_list(D, [I | Is]):-
     writeln(I),
     format(atom(Img_file), '../../data/~w/~d.jpg', [D, I]),
     format(atom(Out_file), '../../results/~w/~d.pl', [D, I]),
     [Out_file],
-    img_load(Img_file, _),
+    img_load('../../data/white.jpg', _),
     display_all_polygons(r),
+    img_release,
+    img_load(Img_file, _),
+    display_refresh,
     unload_file(Out_file),
     get_char(_),
     img_release,

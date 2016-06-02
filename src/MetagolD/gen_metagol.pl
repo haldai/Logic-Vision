@@ -10,13 +10,13 @@
 
 % Abductive/inductive proving
 
-%xx prove(Atoms,_,_) :- write('PROVING '), write(Atoms), nl, fail. 
+%xx prove(Atoms,_,_) :- write('PROVING '), write(Atoms), nl, fail.
 prove([],Prog,Prog).
 prove([Atom-PostTest|Atoms],Prog1,Prog2) :-
     %writeln('dProve'-Atom),
     %--primatom(Atom), !,
     %***---Atom=[P|_],arity(Atom,Arity),defined(P/Arity),!, %***
-    d_prove([Atom-PostTest],Prog1), %--callatom(Atom), 
+    d_prove([Atom-PostTest],Prog1), %--callatom(Atom),
     PostTest,!,
     %write('dProve_passed'-Atom-Atoms),nl,
     prove(Atoms,Prog1,Prog2).
@@ -27,34 +27,35 @@ prove([Atom-PostTest|Atoms],Prog1,Prog2) :-
 %	prove(Atoms,Prog1,Prog2).
 prove([Atom-PostTest|Atoms],Prog1,Prog2) :-
     % Atom is a list of Constant/Variables
-    %write('Prog1='), write(Atom-Prog1), nl, 
+    %write('Prog1='), write(Atom-Prog1), nl,
     metarule(RuleName,MetaSub,(Atom:-Body),PreTest,Prog1),
-    %write('MetaRule='), write(metarule(RuleName,MetaSub,(Atom:-Body),PreTest)), nl, 
+    %write('MetaRule='), write(metarule(RuleName,MetaSub,(Atom:-Body),PreTest)), nl,
     call(PreTest),
-    (PostTest==noExampleinH->   
-	 %--*** to filter hypothesis with examples 
+    (PostTest==noExampleinH->
+	 %--*** to filter hypothesis with examples
 	 RuleName\==instance;
      true
     ),
-    %write('Passed PreTest'), nl, 
+    %write('Passed PreTest'), nl,
     %write('TRYING CLAUSE:'), nl, printprog([metasub(RuleName,MetaSub)]),
     abduce(metasub(RuleName,MetaSub),Prog1,Prog3), % Binds MetaSub
     Prog3=ps(_,_,Left,_),
-    %write('CLAUSES LEFT='), write(Left), nl, 
+    %write('CLAUSES LEFT='), write(Left), nl,
     prove(Body,Prog3,Prog4),
     PostTest,
-    %write('Passed PostTest'), nl, 
+    %write('Passed PostTest'), nl,
     prove(Atoms,Prog4,Prog2).
 
 abduce(MetaSub,Prog,Prog) :-
     ground(MetaSub), MetaSub, !.	% Ground call
 abduce(MetaSub,ps(Ms,S,s(N),MRs),ps([MetaSub|Ms],S,N,MRs)) :-
     MetaSub, !, ground(MetaSub).	% Capture constants
-abduce(MetaSub,Prog,Prog) :- Prog=ps(Ms,_,_,_),
-			     element(MetaSub,Ms), !.		% Already in Program
+abduce(MetaSub,Prog,Prog) :-
+    Prog=ps(Ms,_,_,_),
+	element(MetaSub,Ms), !. 		% Already in Program
 abduce(MetaSub,ps(Ms,S,s(N),Mss),ps([MetaSub|Ms],S,N,Mss)) :-
-    %write('INSTANCE CHECK'), nl, 
-    %write(MetaSub), nl, 
+    %write('INSTANCE CHECK'), nl,
+    %write(MetaSub), nl,
     MetaSub = metasub(RuleName,[P/A|_]).
 %\+(RuleName==instance,P==athletehomestadium).
 %xxx---RuleName\=instance, not(prim(P/A)). %***, functional(RuleName,P,Ms).
@@ -67,7 +68,7 @@ functest([Ep1|Eps],Ep,Prog) :-
 
 functest1(Ep,Ep,_):-!.
 functest1(Ep1,Ep,Prog) :-
-    episode(Ep1,Pos,Neg), 
+    episode(Ep1,Pos,Neg),
     add_prepost(Pos,Pos1), add_prepost(Neg,Neg1),
     member([_,X,Y]-Post,Pos1),d_prove([[Ep,X,Y]-Post],Prog),
     !,fail.
@@ -75,7 +76,7 @@ functest1(Ep1,Ep,Prog).
 
 
 asserta_defined([]).
-asserta_defined([P|Ps]):- 
+asserta_defined([P|Ps]):-
     asserta(defined(P)),
     asserta_defined(Ps).
 
@@ -91,16 +92,16 @@ d_prove([Atom-Post|Atoms],Prog) :-
     callatom(Atom), Post, d_prove(Atoms,Prog).
 d_prove([Atom-Post|Atoms],Prog) :-
     % Atom is a list of Constant/Variables
-    %write('D: Prog='), write(Prog), nl, 
+    %write('D: Prog='), write(Prog), nl,
     Prog=ps(Ms,_,_,_), M=metasub(RuleName,MetaSub),
     element(M,Ms),
     metarule(RuleName,MetaSub,(Atom:-Body),PreTest,Prog),
-    %write('D: TRYING CLAUSE:'), nl, printprog([metasub(RuleName,MetaSub)]), 
+    %write('D: TRYING CLAUSE:'), nl, printprog([metasub(RuleName,MetaSub)]),
     call(PreTest),
-    %write('D: Passed PreTest'), nl, 
+    %write('D: Passed PreTest'), nl,
     d_prove(Body,Prog),
     call(Post),
-    %write('D: Passed PostTest'), nl, 
+    %write('D: Passed PostTest'), nl,
     d_prove(Atoms,Prog).
 
 % Order-related predicates
@@ -136,7 +137,7 @@ converts([],[]) :- !.
 converts([metasub(RuleName,MetaSub)|MIs],[Clause|Cs]) :-
     metarule(RuleName,MetaSub,Clause,_,_),
     numbervars(Clause,0,_),
-    converts(MIs,Cs), 
+    converts(MIs,Cs),
     !.
 
 printclauses([]) :- nl, !.
@@ -208,7 +209,7 @@ learn_episode(Eps,Ep,Int,ps(Ms1,sig(Ps1,Cs1),_,_),Prog2) :-
     %write('testing'-Prog2),nl,
     (functest(Eps,Ep,Prog2)->
          true;
-     fail 
+     fail
     ),
     nproveall(Neg1,Prog2),
     write('FINAL HYPOTHESIS FOR EPISODE: '),  write(Ep),
@@ -228,7 +229,7 @@ add_prepost([Atom|Atoms1],[Atom-noExampleinH|Atoms2]) :-
 
 learn_seq(Eps,Pn) :-
     init_ps(P0),
-    learn_seq(Eps,Eps,P0,Pn). 
+    learn_seq(Eps,Eps,P0,Pn).
 %---***test_seq(Eps,Pn), !.
 
 learn_seq(_,[],B,B) :- !.
@@ -324,7 +325,7 @@ metarule1(chain,[P/2,Q/Qa,R/Ra|UV],([P,X,Y] :- [A-Post1,B-Post2]),Pre,Prog) :-
     Post1 =.. [ObjGT1,X,Z,Prog],
     Post2 =.. [ObjGT2,Z,Y,Prog].
 
-arity([_,_,_,_],3). 
+arity([_,_,_,_],3).
 arity([_,_,_],2). arity([_,_],1).
 
 init_preds(P) :- primitives(P).
@@ -335,7 +336,7 @@ metasub(instance,Args) :-
 
 callatom(Args) :-
     Goal =.. Args,
-    %write('CALLATOM PROVING '), write(Goal), nl, 
+    %write('CALLATOM PROVING '), write(Goal), nl,
     !, call(Goal).
-%xx  	write('SUCCEEDED '), write(Goal), nl, 
+%xx  	write('SUCCEEDED '), write(Goal), nl,
 %***!.

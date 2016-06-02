@@ -114,7 +114,7 @@ int draw_point_list(IplImage **img, MyMessage *msg, int connfd) {
     for (int i = 0; i < msg->highlight_point_num; i++) {
 	CvPoint point = cvPoint(msg->highlight_point_x[i], 
 				msg->highlight_point_y[i]);
-	cvCircle(*img, point, 1, color, 2, 8, 0);
+	cvCircle(*img, point, 3, color, 2, 8, 0);
     }
     return return_message(msg_back, connfd);
 }

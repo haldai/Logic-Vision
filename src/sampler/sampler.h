@@ -70,12 +70,3 @@ extern CvScalar myCvPaletteDV(MyQuantizedImage* quant, CvPoint point, int size, 
 
 #endif
 
-
-
-
-
-
-
-
-
-

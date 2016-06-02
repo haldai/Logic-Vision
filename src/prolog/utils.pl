@@ -184,8 +184,12 @@ display_polygon_list(Polygon_list, C):-
 
 % display all polygons
 display_all_polygons(C):-
-    polygon(_, L),
-    display_line_list(L, C).
+    findall(L, (polygon(_, L), 
+		display_line_list(L, C), 
+		edges_ends(L, V),
+		display_point_list(V, b),
+		get_char(_), 
+		display_refresh), _).
 
 % random point
 random_point(X, Y):-

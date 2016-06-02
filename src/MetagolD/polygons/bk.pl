@@ -68,10 +68,10 @@ suffix(L,X) :-
 
 % predicates for abduction
 % for regular polygons
-dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
+% dyadics([polygon/2, connect_edges/3, angles_list/2, std_dev_bounded/2]). % has_angle/3
 
 % for polygons
-% dyadics([polygon/2, list_length/2, connect_edges/3]). 
+dyadics([polygon/2, list_length/2, connect_edges/3]). 
 
 % for right-angle triangles
 % dyadics([polygon/2, triangle/1, angles_list/2, has_angle/3]).
